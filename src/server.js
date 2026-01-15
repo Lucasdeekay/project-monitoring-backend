@@ -46,8 +46,8 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/projects', require('./routes/projects'));
 app.use('/api/feedback', require('./routes/feedback'));
 app.use('/api/evaluations', require('./routes/evaluations'));
-// app.use('/api/users', require('./routes/users'));
-// app.use('/api/reports', require('./routes/reports'));
+app.use('/api/users', require('./routes/users'));
+app.use('/api/reports', require('./routes/reports'));
 
 // Root endpoint
 app.get("/", (req, res) => {
