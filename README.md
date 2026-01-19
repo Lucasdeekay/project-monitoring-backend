@@ -22,7 +22,7 @@ A Node.js/Express backend API for monitoring and evaluating projects with MySQL 
 
 1. **Clone the repository**
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/Lucasdeekay/project-monitoring-backend.git
    cd project-monitoring-backend
    ```
 
