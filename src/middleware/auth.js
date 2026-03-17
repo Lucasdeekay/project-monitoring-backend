@@ -107,7 +107,7 @@ const optionalAuth = async (req, res, next) => {
     }
 
     next();
-  } catch (error) {
+  } catch {
     // Continue without user if token is invalid
     next();
   }
@@ -131,7 +131,7 @@ const requireOwnershipOrAdmin = (resourceUserIdField = 'student_id') => {
     }
 
     // Check if user owns the resource
-    const resourceId = req.params.id;
+    const _resourceId = req.params.id;
 
     try {
       // Get resource from database to check ownership
@@ -171,9 +171,7 @@ const rateLimit = (maxRequests = 100, windowMs = 15 * 60 * 1000) => {
     }
 
     // Remove old requests outside the time window
-    requestLog[userKey] = requestLog[userKey].filter(
-      (timestamp) => now - timestamp < windowMs
-    );
+    requestLog[userKey] = requestLog[userKey].filter(timestamp => now - timestamp < windowMs);
 
     if (requestLog[userKey].length >= maxRequests) {
       return res.status(429).json({

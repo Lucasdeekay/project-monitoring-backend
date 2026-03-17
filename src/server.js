@@ -76,7 +76,7 @@ app.use((req, res) => {
 });
 
 // Global error handler
-app.use((err, req, res, next) => {
+app.use((err, req, res, _next) => {
   console.error('Error:', err.message);
 
   res.status(err.status || 500).json({
@@ -97,9 +97,7 @@ const startServer = async () => {
     const dbConnected = await testConnection();
 
     if (!dbConnected) {
-      console.error(
-        '❌ Failed to connect to database. Please check your configuration.'
-      );
+      console.error('❌ Failed to connect to database. Please check your configuration.');
       process.exit(1);
     }
 
@@ -113,9 +111,9 @@ const startServer = async () => {
       console.log('═══════════════════════════════════════════════════════');
       console.log('🚀 Project Monitoring API Server');
       console.log('═══════════════════════════════════════════════════════');
-      console.log(`📡 Server running on: http://localhost:${PORT}`);
+      console.log(`📡 Server running on: ${process.env.CLIENT_URL}:${PORT}`);
       console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-      console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
+      console.log(`📊 Health check: ${process.env.CLIENT_URL}/api/health`);
       console.log(`🔗 Frontend URL: ${process.env.CLIENT_URL}`);
       console.log('═══════════════════════════════════════════════════════');
       console.log('');
@@ -127,13 +125,13 @@ const startServer = async () => {
 };
 
 // Handle uncaught exceptions
-process.on('uncaughtException', (error) => {
+process.on('uncaughtException', error => {
   console.error('Uncaught Exception:', error);
   process.exit(1);
 });
 
 // Handle unhandled promise rejections
-process.on('unhandledRejection', (error) => {
+process.on('unhandledRejection', error => {
   console.error('Unhandled Rejection:', error);
   process.exit(1);
 });

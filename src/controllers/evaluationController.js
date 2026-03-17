@@ -18,9 +18,7 @@ const getEvaluationsByProject = async (req, res) => {
     const { projectId } = req.params;
 
     // Get project to check authorization
-    const projects = await query('SELECT * FROM projects WHERE id = ?', [
-      projectId,
-    ]);
+    const projects = await query('SELECT * FROM projects WHERE id = ?', [projectId]);
 
     if (projects.length === 0) {
       return res.status(404).json({
@@ -35,19 +33,14 @@ const getEvaluationsByProject = async (req, res) => {
     if (req.user.role === 'student' && project.student_id !== req.user.id) {
       return res.status(403).json({
         success: false,
-        message:
-          'Access denied. You can only view evaluations for your own projects.',
+        message: 'Access denied. You can only view evaluations for your own projects.',
       });
     }
 
-    if (
-      req.user.role === 'supervisor' &&
-      project.supervisor_id !== req.user.id
-    ) {
+    if (req.user.role === 'supervisor' && project.supervisor_id !== req.user.id) {
       return res.status(403).json({
         success: false,
-        message:
-          'Access denied. You can only view evaluations for projects you supervise.',
+        message: 'Access denied. You can only view evaluations for projects you supervise.',
       });
     }
 
@@ -69,7 +62,7 @@ const getEvaluationsByProject = async (req, res) => {
 
     res.json({
       success: true,
-      data: evaluations.map((e) => ({
+      data: evaluations.map(e => ({
         id: e.id,
         projectId: e.project_id,
         evaluatorId: e.evaluator_id,
@@ -138,10 +131,7 @@ const getEvaluationById = async (req, res) => {
       });
     }
 
-    if (
-      req.user.role === 'supervisor' &&
-      evaluation.evaluator_id !== req.user.id
-    ) {
+    if (req.user.role === 'supervisor' && evaluation.evaluator_id !== req.user.id) {
       return res.status(403).json({
         success: false,
         message: 'Access denied.',
@@ -196,11 +186,7 @@ const createEvaluation = async (req, res) => {
 
     // Validate criteria structure
     for (const criterion of criteria) {
-      if (
-        !criterion.name ||
-        criterion.score === undefined ||
-        criterion.maxScore === undefined
-      ) {
+      if (!criterion.name || criterion.score === undefined || criterion.maxScore === undefined) {
         return res.status(400).json({
           success: false,
           message: 'Each criterion must have name, score, and maxScore.',
@@ -216,9 +202,7 @@ const createEvaluation = async (req, res) => {
     }
 
     // Get project to verify
-    const projects = await query('SELECT * FROM projects WHERE id = ?', [
-      projectId,
-    ]);
+    const projects = await query('SELECT * FROM projects WHERE id = ?', [projectId]);
 
     if (projects.length === 0) {
       return res.status(404).json({
@@ -230,10 +214,7 @@ const createEvaluation = async (req, res) => {
     const project = projects[0];
 
     // Only the assigned supervisor or admin can evaluate
-    if (
-      req.user.role === 'supervisor' &&
-      project.supervisor_id !== req.user.id
-    ) {
+    if (req.user.role === 'supervisor' && project.supervisor_id !== req.user.id) {
       return res.status(403).json({
         success: false,
         message: 'Access denied. You can only evaluate projects you supervise.',
@@ -281,10 +262,7 @@ const createEvaluation = async (req, res) => {
     );
 
     // Update project status to approved
-    await query('UPDATE projects SET status = ? WHERE id = ?', [
-      'approved',
-      projectId,
-    ]);
+    await query('UPDATE projects SET status = ? WHERE id = ?', ['approved', projectId]);
 
     // Create notification for student
     await query(
@@ -349,9 +327,7 @@ const updateEvaluation = async (req, res) => {
     const { criteria, generalComment } = req.body;
 
     // Get evaluation
-    const evaluations = await query('SELECT * FROM evaluations WHERE id = ?', [
-      id,
-    ]);
+    const evaluations = await query('SELECT * FROM evaluations WHERE id = ?', [id]);
 
     if (evaluations.length === 0) {
       return res.status(404).json({
@@ -376,11 +352,7 @@ const updateEvaluation = async (req, res) => {
     if (criteria && Array.isArray(criteria)) {
       // Validate criteria
       for (const criterion of criteria) {
-        if (
-          !criterion.name ||
-          criterion.score === undefined ||
-          criterion.maxScore === undefined
-        ) {
+        if (!criterion.name || criterion.score === undefined || criterion.maxScore === undefined) {
           return res.status(400).json({
             success: false,
             message: 'Each criterion must have name, score, and maxScore.',
@@ -402,12 +374,7 @@ const updateEvaluation = async (req, res) => {
       else if (percentage >= 40) grade = 'E';
       else grade = 'F';
 
-      updates.push(
-        'criteria = ?',
-        'total_score = ?',
-        'max_total_score = ?',
-        'grade = ?'
-      );
+      updates.push('criteria = ?', 'total_score = ?', 'max_total_score = ?', 'grade = ?');
       values.push(JSON.stringify(criteria), totalScore, maxTotalScore, grade);
     }
 
@@ -425,10 +392,7 @@ const updateEvaluation = async (req, res) => {
 
     values.push(id);
 
-    await query(
-      `UPDATE evaluations SET ${updates.join(', ')} WHERE id = ?`,
-      values
-    );
+    await query(`UPDATE evaluations SET ${updates.join(', ')} WHERE id = ?`, values);
 
     // Get updated evaluation
     const updatedEvaluations = await query(
@@ -478,9 +442,7 @@ const deleteEvaluation = async (req, res) => {
     const { id } = req.params;
 
     // Get evaluation
-    const evaluations = await query('SELECT * FROM evaluations WHERE id = ?', [
-      id,
-    ]);
+    const evaluations = await query('SELECT * FROM evaluations WHERE id = ?', [id]);
 
     if (evaluations.length === 0) {
       return res.status(404).json({
@@ -489,7 +451,7 @@ const deleteEvaluation = async (req, res) => {
       });
     }
 
-    const evaluation = evaluations[0];
+    const _evaluation = evaluations[0];
 
     // Only admin can delete evaluations
     if (req.user.role !== 'admin') {

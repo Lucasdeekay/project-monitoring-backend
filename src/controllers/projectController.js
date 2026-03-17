@@ -1,4 +1,4 @@
-const { query, getConnection } = require('../config/database');
+const { query } = require('../config/database');
 
 const safeJsonParse = (str, defaultValue = []) => {
   if (!str) return defaultValue;
@@ -15,15 +15,7 @@ const safeJsonParse = (str, defaultValue = []) => {
  */
 const getAllProjects = async (req, res) => {
   try {
-    const {
-      status,
-      department,
-      studentId,
-      supervisorId,
-      search,
-      page = 1,
-      limit = 10,
-    } = req.query;
+    const { status, department, studentId, supervisorId, search, page = 1, limit = 10 } = req.query;
 
     const offset = (parseInt(page) - 1) * parseInt(limit);
 
@@ -66,8 +58,7 @@ const getAllProjects = async (req, res) => {
     }
     // Admins can see all projects
 
-    const whereClause =
-      conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
     // Get total count
     const countQuery = `
@@ -96,14 +87,10 @@ const getAllProjects = async (req, res) => {
       LIMIT ? OFFSET ?
     `;
 
-    const projects = await query(projectsQuery, [
-      ...params,
-      parseInt(limit),
-      offset,
-    ]);
+    const projects = await query(projectsQuery, [...params, parseInt(limit), offset]);
 
     // Parse JSON fields
-    const formattedProjects = projects.map((project) => ({
+    const formattedProjects = projects.map(project => ({
       id: project.id,
       title: project.title,
       description: project.description,
@@ -192,10 +179,7 @@ const getProjectById = async (req, res) => {
       });
     }
 
-    if (
-      req.user.role === 'supervisor' &&
-      project.supervisor_id !== req.user.id
-    ) {
+    if (req.user.role === 'supervisor' && project.supervisor_id !== req.user.id) {
       return res.status(403).json({
         success: false,
         message: 'Access denied. You can only view projects you supervise.',
@@ -234,7 +218,7 @@ const getProjectById = async (req, res) => {
       expectedCompletionDate: project.expected_completion_date,
       objectives: safeJsonParse(project.objectives),
       technologies: safeJsonParse(project.technologies),
-      documents: documents.map((doc) => ({
+      documents: documents.map(doc => ({
         id: doc.id,
         name: doc.name,
         type: doc.type,
@@ -294,10 +278,10 @@ const createProject = async (req, res) => {
     }
 
     // Verify supervisor exists and is a supervisor
-    const supervisors = await query(
-      'SELECT id, role FROM users WHERE id = ? AND role = ?',
-      [supervisorId, 'supervisor']
-    );
+    const supervisors = await query('SELECT id, role FROM users WHERE id = ? AND role = ?', [
+      supervisorId,
+      'supervisor',
+    ]);
 
     if (supervisors.length === 0) {
       return res.status(400).json({
@@ -432,9 +416,7 @@ const updateProject = async (req, res) => {
     }
     if (
       progress !== undefined &&
-      (req.user.role === 'student' ||
-        req.user.role === 'supervisor' ||
-        req.user.role === 'admin')
+      (req.user.role === 'student' || req.user.role === 'supervisor' || req.user.role === 'admin')
     ) {
       updates.push('progress = ?');
       values.push(Math.min(100, Math.max(0, progress)));
@@ -461,10 +443,7 @@ const updateProject = async (req, res) => {
 
     values.push(id);
 
-    await query(
-      `UPDATE projects SET ${updates.join(', ')} WHERE id = ?`,
-      values
-    );
+    await query(`UPDATE projects SET ${updates.join(', ')} WHERE id = ?`, values);
 
     // Get updated project
     const updatedProjects = await query(
