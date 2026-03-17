@@ -1,4 +1,13 @@
-const { query, getConnection } = require("../config/database");
+const { query, getConnection } = require('../config/database');
+
+const safeJsonParse = (str, defaultValue = []) => {
+  if (!str) return defaultValue;
+  try {
+    return JSON.parse(str);
+  } catch {
+    return defaultValue;
+  }
+};
 
 /**
  * Get all projects (with filters and pagination)
@@ -23,42 +32,42 @@ const getAllProjects = async (req, res) => {
     const params = [];
 
     if (status) {
-      conditions.push("p.status = ?");
+      conditions.push('p.status = ?');
       params.push(status);
     }
 
     if (department) {
-      conditions.push("p.department = ?");
+      conditions.push('p.department = ?');
       params.push(department);
     }
 
     if (studentId) {
-      conditions.push("p.student_id = ?");
+      conditions.push('p.student_id = ?');
       params.push(studentId);
     }
 
     if (supervisorId) {
-      conditions.push("p.supervisor_id = ?");
+      conditions.push('p.supervisor_id = ?');
       params.push(supervisorId);
     }
 
     if (search) {
-      conditions.push("(p.title LIKE ? OR p.description LIKE ?)");
+      conditions.push('(p.title LIKE ? OR p.description LIKE ?)');
       params.push(`%${search}%`, `%${search}%`);
     }
 
     // Role-based filtering
-    if (req.user.role === "student") {
-      conditions.push("p.student_id = ?");
+    if (req.user.role === 'student') {
+      conditions.push('p.student_id = ?');
       params.push(req.user.id);
-    } else if (req.user.role === "supervisor") {
-      conditions.push("p.supervisor_id = ?");
+    } else if (req.user.role === 'supervisor') {
+      conditions.push('p.supervisor_id = ?');
       params.push(req.user.id);
     }
     // Admins can see all projects
 
     const whereClause =
-      conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+      conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
     // Get total count
     const countQuery = `
@@ -112,10 +121,8 @@ const getAllProjects = async (req, res) => {
       startDate: project.start_date,
       submissionDate: project.submission_date,
       expectedCompletionDate: project.expected_completion_date,
-      objectives: project.objectives ? JSON.parse(project.objectives) : [],
-      technologies: project.technologies
-        ? JSON.parse(project.technologies)
-        : [],
+      objectives: safeJsonParse(project.objectives),
+      technologies: safeJsonParse(project.technologies),
       createdAt: project.created_at,
       updatedAt: project.updated_at,
     }));
@@ -131,11 +138,11 @@ const getAllProjects = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Get projects error:", error);
+    console.error('Get projects error:', error);
     res.status(500).json({
       success: false,
-      message: "Failed to retrieve projects.",
-      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+      message: 'Failed to retrieve projects.',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
     });
   }
 };
@@ -171,33 +178,33 @@ const getProjectById = async (req, res) => {
     if (projects.length === 0) {
       return res.status(404).json({
         success: false,
-        message: "Project not found.",
+        message: 'Project not found.',
       });
     }
 
     const project = projects[0];
 
     // Check authorization
-    if (req.user.role === "student" && project.student_id !== req.user.id) {
+    if (req.user.role === 'student' && project.student_id !== req.user.id) {
       return res.status(403).json({
         success: false,
-        message: "Access denied. You can only view your own projects.",
+        message: 'Access denied. You can only view your own projects.',
       });
     }
 
     if (
-      req.user.role === "supervisor" &&
+      req.user.role === 'supervisor' &&
       project.supervisor_id !== req.user.id
     ) {
       return res.status(403).json({
         success: false,
-        message: "Access denied. You can only view projects you supervise.",
+        message: 'Access denied. You can only view projects you supervise.',
       });
     }
 
     // Get documents
     const documents = await query(
-      "SELECT * FROM documents WHERE project_id = ? ORDER BY upload_date DESC",
+      'SELECT * FROM documents WHERE project_id = ? ORDER BY upload_date DESC',
       [id]
     );
 
@@ -225,10 +232,8 @@ const getProjectById = async (req, res) => {
       startDate: project.start_date,
       submissionDate: project.submission_date,
       expectedCompletionDate: project.expected_completion_date,
-      objectives: project.objectives ? JSON.parse(project.objectives) : [],
-      technologies: project.technologies
-        ? JSON.parse(project.technologies)
-        : [],
+      objectives: safeJsonParse(project.objectives),
+      technologies: safeJsonParse(project.technologies),
       documents: documents.map((doc) => ({
         id: doc.id,
         name: doc.name,
@@ -247,11 +252,11 @@ const getProjectById = async (req, res) => {
       data: formattedProject,
     });
   } catch (error) {
-    console.error("Get project error:", error);
+    console.error('Get project error:', error);
     res.status(500).json({
       success: false,
-      message: "Failed to retrieve project.",
-      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+      message: 'Failed to retrieve project.',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
     });
   }
 };
@@ -276,28 +281,28 @@ const createProject = async (req, res) => {
     if (!title || !supervisorId) {
       return res.status(400).json({
         success: false,
-        message: "Please provide title and supervisor.",
+        message: 'Please provide title and supervisor.',
       });
     }
 
     // Only students can create projects
-    if (req.user.role !== "student") {
+    if (req.user.role !== 'student') {
       return res.status(403).json({
         success: false,
-        message: "Only students can create projects.",
+        message: 'Only students can create projects.',
       });
     }
 
     // Verify supervisor exists and is a supervisor
     const supervisors = await query(
-      "SELECT id, role FROM users WHERE id = ? AND role = ?",
-      [supervisorId, "supervisor"]
+      'SELECT id, role FROM users WHERE id = ? AND role = ?',
+      [supervisorId, 'supervisor']
     );
 
     if (supervisors.length === 0) {
       return res.status(400).json({
         success: false,
-        message: "Invalid supervisor ID.",
+        message: 'Invalid supervisor ID.',
       });
     }
 
@@ -333,7 +338,7 @@ const createProject = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: "Project created successfully.",
+      message: 'Project created successfully.',
       data: {
         id: project.id,
         title: project.title,
@@ -347,19 +352,17 @@ const createProject = async (req, res) => {
         progress: project.progress,
         startDate: project.start_date,
         expectedCompletionDate: project.expected_completion_date,
-        objectives: project.objectives ? JSON.parse(project.objectives) : [],
-        technologies: project.technologies
-          ? JSON.parse(project.technologies)
-          : [],
+        objectives: safeJsonParse(project.objectives),
+        technologies: safeJsonParse(project.technologies),
         createdAt: project.created_at,
       },
     });
   } catch (error) {
-    console.error("Create project error:", error);
+    console.error('Create project error:', error);
     res.status(500).json({
       success: false,
-      message: "Failed to create project.",
-      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+      message: 'Failed to create project.',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
     });
   }
 };
@@ -382,22 +385,22 @@ const updateProject = async (req, res) => {
     } = req.body;
 
     // Get project
-    const projects = await query("SELECT * FROM projects WHERE id = ?", [id]);
+    const projects = await query('SELECT * FROM projects WHERE id = ?', [id]);
 
     if (projects.length === 0) {
       return res.status(404).json({
         success: false,
-        message: "Project not found.",
+        message: 'Project not found.',
       });
     }
 
     const project = projects[0];
 
     // Authorization check
-    if (req.user.role === "student" && project.student_id !== req.user.id) {
+    if (req.user.role === 'student' && project.student_id !== req.user.id) {
       return res.status(403).json({
         success: false,
-        message: "Access denied. You can only update your own projects.",
+        message: 'Access denied. You can only update your own projects.',
       });
     }
 
@@ -406,60 +409,60 @@ const updateProject = async (req, res) => {
     const values = [];
 
     if (title) {
-      updates.push("title = ?");
+      updates.push('title = ?');
       values.push(title);
     }
     if (description !== undefined) {
-      updates.push("description = ?");
+      updates.push('description = ?');
       values.push(description);
     }
     if (
       status &&
-      (req.user.role === "supervisor" ||
-        req.user.role === "admin" ||
+      (req.user.role === 'supervisor' ||
+        req.user.role === 'admin' ||
         req.user.id === project.student_id)
     ) {
-      updates.push("status = ?");
+      updates.push('status = ?');
       values.push(status);
 
       // Set submission date when status changes to submitted
-      if (status === "submitted" && !project.submission_date) {
-        updates.push("submission_date = CURDATE()");
+      if (status === 'submitted' && !project.submission_date) {
+        updates.push('submission_date = CURDATE()');
       }
     }
     if (
       progress !== undefined &&
-      (req.user.role === "student" ||
-        req.user.role === "supervisor" ||
-        req.user.role === "admin")
+      (req.user.role === 'student' ||
+        req.user.role === 'supervisor' ||
+        req.user.role === 'admin')
     ) {
-      updates.push("progress = ?");
+      updates.push('progress = ?');
       values.push(Math.min(100, Math.max(0, progress)));
     }
     if (expectedCompletionDate) {
-      updates.push("expected_completion_date = ?");
+      updates.push('expected_completion_date = ?');
       values.push(expectedCompletionDate);
     }
     if (objectives) {
-      updates.push("objectives = ?");
+      updates.push('objectives = ?');
       values.push(JSON.stringify(objectives));
     }
     if (technologies) {
-      updates.push("technologies = ?");
+      updates.push('technologies = ?');
       values.push(JSON.stringify(technologies));
     }
 
     if (updates.length === 0) {
       return res.status(400).json({
         success: false,
-        message: "No fields to update.",
+        message: 'No fields to update.',
       });
     }
 
     values.push(id);
 
     await query(
-      `UPDATE projects SET ${updates.join(", ")} WHERE id = ?`,
+      `UPDATE projects SET ${updates.join(', ')} WHERE id = ?`,
       values
     );
 
@@ -477,7 +480,7 @@ const updateProject = async (req, res) => {
 
     res.json({
       success: true,
-      message: "Project updated successfully.",
+      message: 'Project updated successfully.',
       data: {
         id: updatedProject.id,
         title: updatedProject.title,
@@ -492,21 +495,17 @@ const updateProject = async (req, res) => {
         startDate: updatedProject.start_date,
         submissionDate: updatedProject.submission_date,
         expectedCompletionDate: updatedProject.expected_completion_date,
-        objectives: updatedProject.objectives
-          ? JSON.parse(updatedProject.objectives)
-          : [],
-        technologies: updatedProject.technologies
-          ? JSON.parse(updatedProject.technologies)
-          : [],
+        objectives: safeJsonParse(updatedProject.objectives),
+        technologies: safeJsonParse(updatedProject.technologies),
         updatedAt: updatedProject.updated_at,
       },
     });
   } catch (error) {
-    console.error("Update project error:", error);
+    console.error('Update project error:', error);
     res.status(500).json({
       success: false,
-      message: "Failed to update project.",
-      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+      message: 'Failed to update project.',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
     });
   }
 };
@@ -520,45 +519,45 @@ const deleteProject = async (req, res) => {
     const { id } = req.params;
 
     // Get project
-    const projects = await query("SELECT * FROM projects WHERE id = ?", [id]);
+    const projects = await query('SELECT * FROM projects WHERE id = ?', [id]);
 
     if (projects.length === 0) {
       return res.status(404).json({
         success: false,
-        message: "Project not found.",
+        message: 'Project not found.',
       });
     }
 
     const project = projects[0];
 
     // Authorization check - only student owner or admin can delete
-    if (req.user.role === "student" && project.student_id !== req.user.id) {
+    if (req.user.role === 'student' && project.student_id !== req.user.id) {
       return res.status(403).json({
         success: false,
-        message: "Access denied. You can only delete your own projects.",
+        message: 'Access denied. You can only delete your own projects.',
       });
     }
 
-    if (req.user.role === "supervisor") {
+    if (req.user.role === 'supervisor') {
       return res.status(403).json({
         success: false,
-        message: "Supervisors cannot delete projects.",
+        message: 'Supervisors cannot delete projects.',
       });
     }
 
     // Delete project (cascade will delete related documents, feedback, evaluations)
-    await query("DELETE FROM projects WHERE id = ?", [id]);
+    await query('DELETE FROM projects WHERE id = ?', [id]);
 
     res.json({
       success: true,
-      message: "Project deleted successfully.",
+      message: 'Project deleted successfully.',
     });
   } catch (error) {
-    console.error("Delete project error:", error);
+    console.error('Delete project error:', error);
     res.status(500).json({
       success: false,
-      message: "Failed to delete project.",
-      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+      message: 'Failed to delete project.',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
     });
   }
 };

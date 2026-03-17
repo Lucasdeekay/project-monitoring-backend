@@ -1,5 +1,5 @@
-const jwt = require("jsonwebtoken");
-const { query } = require("../config/database");
+const jwt = require('jsonwebtoken');
+const { query } = require('../config/database');
 
 /**
  * Verify JWT token and attach user to request
@@ -7,13 +7,13 @@ const { query } = require("../config/database");
 const authenticateToken = async (req, res, next) => {
   try {
     // Get token from header
-    const authHeader = req.headers["authorization"];
-    const token = authHeader && authHeader.split(" ")[1]; // Bearer TOKEN
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
 
     if (!token) {
       return res.status(401).json({
         success: false,
-        message: "Access denied. No token provided.",
+        message: 'Access denied. No token provided.',
       });
     }
 
@@ -22,14 +22,14 @@ const authenticateToken = async (req, res, next) => {
 
     // Get user from database
     const users = await query(
-      "SELECT id, name, email, role, department, phone, matric_number, title, specialization, level FROM users WHERE id = ?",
+      'SELECT id, name, email, role, department, phone, matric_number, title, specialization, level FROM users WHERE id = ?',
       [decoded.id]
     );
 
     if (users.length === 0) {
       return res.status(401).json({
         success: false,
-        message: "Invalid token. User not found.",
+        message: 'Invalid token. User not found.',
       });
     }
 
@@ -37,24 +37,24 @@ const authenticateToken = async (req, res, next) => {
     req.user = users[0];
     next();
   } catch (error) {
-    if (error.name === "JsonWebTokenError") {
+    if (error.name === 'JsonWebTokenError') {
       return res.status(401).json({
         success: false,
-        message: "Invalid token.",
+        message: 'Invalid token.',
       });
     }
 
-    if (error.name === "TokenExpiredError") {
+    if (error.name === 'TokenExpiredError') {
       return res.status(401).json({
         success: false,
-        message: "Token expired. Please login again.",
+        message: 'Token expired. Please login again.',
       });
     }
 
-    console.error("Auth middleware error:", error);
+    console.error('Auth middleware error:', error);
     res.status(500).json({
       success: false,
-      message: "Authentication error.",
+      message: 'Authentication error.',
     });
   }
 };
@@ -67,14 +67,14 @@ const requireRole = (...allowedRoles) => {
     if (!req.user) {
       return res.status(401).json({
         success: false,
-        message: "Authentication required.",
+        message: 'Authentication required.',
       });
     }
 
     if (!allowedRoles.includes(req.user.role)) {
       return res.status(403).json({
         success: false,
-        message: "Access denied. Insufficient permissions.",
+        message: 'Access denied. Insufficient permissions.',
         requiredRole: allowedRoles,
         userRole: req.user.role,
       });
@@ -89,8 +89,8 @@ const requireRole = (...allowedRoles) => {
  */
 const optionalAuth = async (req, res, next) => {
   try {
-    const authHeader = req.headers["authorization"];
-    const token = authHeader && authHeader.split(" ")[1];
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
 
     if (!token) {
       return next();
@@ -98,7 +98,7 @@ const optionalAuth = async (req, res, next) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const users = await query(
-      "SELECT id, name, email, role, department, phone, matric_number, title, specialization, level FROM users WHERE id = ?",
+      'SELECT id, name, email, role, department, phone, matric_number, title, specialization, level FROM users WHERE id = ?',
       [decoded.id]
     );
 
@@ -116,17 +116,17 @@ const optionalAuth = async (req, res, next) => {
 /**
  * Check if user owns the resource or is admin
  */
-const requireOwnershipOrAdmin = (resourceUserIdField = "student_id") => {
+const requireOwnershipOrAdmin = (resourceUserIdField = 'student_id') => {
   return async (req, res, next) => {
     if (!req.user) {
       return res.status(401).json({
         success: false,
-        message: "Authentication required.",
+        message: 'Authentication required.',
       });
     }
 
     // Admins can access everything
-    if (req.user.role === "admin") {
+    if (req.user.role === 'admin') {
       return next();
     }
 
@@ -141,16 +141,16 @@ const requireOwnershipOrAdmin = (resourceUserIdField = "student_id") => {
       if (!isOwner) {
         return res.status(403).json({
           success: false,
-          message: "Access denied. You can only access your own resources.",
+          message: 'Access denied. You can only access your own resources.',
         });
       }
 
       next();
     } catch (error) {
-      console.error("Ownership check error:", error);
+      console.error('Ownership check error:', error);
       res.status(500).json({
         success: false,
-        message: "Error checking resource ownership.",
+        message: 'Error checking resource ownership.',
       });
     }
   };
@@ -178,7 +178,7 @@ const rateLimit = (maxRequests = 100, windowMs = 15 * 60 * 1000) => {
     if (requestLog[userKey].length >= maxRequests) {
       return res.status(429).json({
         success: false,
-        message: "Too many requests. Please try again later.",
+        message: 'Too many requests. Please try again later.',
         retryAfter: Math.ceil(windowMs / 1000),
       });
     }

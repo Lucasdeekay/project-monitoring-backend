@@ -1,4 +1,4 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
 const {
   getFeedbackByProject,
@@ -7,22 +7,22 @@ const {
   updateFeedback,
   deleteFeedback,
   markAsRead,
-} = require("../controllers/feedbackController");
-const { authenticateToken, requireRole } = require("../middleware/auth");
+} = require('../controllers/feedbackController');
+const { authenticateToken, requireRole } = require('../middleware/auth');
 
 /**
  * @route   GET /api/feedback/project/:projectId
  * @desc    Get all feedback for a project
  * @access  Private (Student: own project, Supervisor: supervised project, Admin: all)
  */
-router.get("/project/:projectId", authenticateToken, getFeedbackByProject);
+router.get('/project/:projectId', authenticateToken, getFeedbackByProject);
 
 /**
  * @route   GET /api/feedback/:id
  * @desc    Get single feedback by ID
  * @access  Private (Student: own project feedback, Supervisor: own feedback, Admin: all)
  */
-router.get("/:id", authenticateToken, getFeedbackById);
+router.get('/:id', authenticateToken, getFeedbackById);
 
 /**
  * @route   POST /api/feedback
@@ -30,9 +30,9 @@ router.get("/:id", authenticateToken, getFeedbackById);
  * @access  Private (Supervisors and Admins only)
  */
 router.post(
-  "/",
+  '/',
   authenticateToken,
-  requireRole("supervisor", "admin"),
+  requireRole('supervisor', 'admin'),
   createFeedback
 );
 
@@ -42,9 +42,9 @@ router.post(
  * @access  Private (Supervisor who created it, Admin)
  */
 router.put(
-  "/:id",
+  '/:id',
   authenticateToken,
-  requireRole("supervisor", "admin"),
+  requireRole('supervisor', 'admin'),
   updateFeedback
 );
 
@@ -54,9 +54,9 @@ router.put(
  * @access  Private (Supervisor who created it, Admin)
  */
 router.delete(
-  "/:id",
+  '/:id',
   authenticateToken,
-  requireRole("supervisor", "admin"),
+  requireRole('supervisor', 'admin'),
   deleteFeedback
 );
 
@@ -65,7 +65,7 @@ router.delete(
  * @desc    Mark feedback as read
  * @access  Private (Students only - for their own project feedback)
  */
-router.put("/:id/read", authenticateToken, requireRole("student"), markAsRead);
+router.put('/:id/read', authenticateToken, requireRole('student'), markAsRead);
 
 /**
  * @route   GET /api/feedback/unread/count
@@ -73,12 +73,12 @@ router.put("/:id/read", authenticateToken, requireRole("student"), markAsRead);
  * @access  Private (Students only)
  */
 router.get(
-  "/unread/count",
+  '/unread/count',
   authenticateToken,
-  requireRole("student"),
+  requireRole('student'),
   async (req, res) => {
     try {
-      const { query } = require("../config/database");
+      const { query } = require('../config/database');
 
       const result = await query(
         `
@@ -97,12 +97,12 @@ router.get(
         },
       });
     } catch (error) {
-      console.error("Get unread count error:", error);
+      console.error('Get unread count error:', error);
       res.status(500).json({
         success: false,
-        message: "Failed to get unread count.",
+        message: 'Failed to get unread count.',
         error:
-          process.env.NODE_ENV === "development" ? error.message : undefined,
+          process.env.NODE_ENV === 'development' ? error.message : undefined,
       });
     }
   }
@@ -114,12 +114,12 @@ router.get(
  * @access  Private (Students only)
  */
 router.get(
-  "/student/all",
+  '/student/all',
   authenticateToken,
-  requireRole("student"),
+  requireRole('student'),
   async (req, res) => {
     try {
-      const { query } = require("../config/database");
+      const { query } = require('../config/database');
 
       const feedback = await query(
         `
@@ -156,12 +156,12 @@ router.get(
         })),
       });
     } catch (error) {
-      console.error("Get student feedback error:", error);
+      console.error('Get student feedback error:', error);
       res.status(500).json({
         success: false,
-        message: "Failed to get feedback.",
+        message: 'Failed to get feedback.',
         error:
-          process.env.NODE_ENV === "development" ? error.message : undefined,
+          process.env.NODE_ENV === 'development' ? error.message : undefined,
       });
     }
   }
@@ -173,12 +173,12 @@ router.get(
  * @access  Private (Supervisors only)
  */
 router.get(
-  "/supervisor/given",
+  '/supervisor/given',
   authenticateToken,
-  requireRole("supervisor"),
+  requireRole('supervisor'),
   async (req, res) => {
     try {
-      const { query } = require("../config/database");
+      const { query } = require('../config/database');
 
       const feedback = await query(
         `
@@ -212,12 +212,12 @@ router.get(
         })),
       });
     } catch (error) {
-      console.error("Get supervisor feedback error:", error);
+      console.error('Get supervisor feedback error:', error);
       res.status(500).json({
         success: false,
-        message: "Failed to get feedback.",
+        message: 'Failed to get feedback.',
         error:
-          process.env.NODE_ENV === "development" ? error.message : undefined,
+          process.env.NODE_ENV === 'development' ? error.message : undefined,
       });
     }
   }

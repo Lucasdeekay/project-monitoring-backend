@@ -1,4 +1,4 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
 const {
   getDashboardStats,
@@ -6,8 +6,8 @@ const {
   getStudentReport,
   getSupervisorReport,
   getTimelineReport,
-} = require("../controllers/reportController");
-const { authenticateToken, requireRole } = require("../middleware/auth");
+} = require('../controllers/reportController');
+const { authenticateToken, requireRole } = require('../middleware/auth');
 
 /**
  * @route   GET /api/reports/dashboard
@@ -15,9 +15,9 @@ const { authenticateToken, requireRole } = require("../middleware/auth");
  * @access  Private (Admins only)
  */
 router.get(
-  "/dashboard",
+  '/dashboard',
   authenticateToken,
-  requireRole("admin"),
+  requireRole('admin'),
   getDashboardStats
 );
 
@@ -27,9 +27,9 @@ router.get(
  * @access  Private (Admins only)
  */
 router.get(
-  "/department/:department",
+  '/department/:department',
   authenticateToken,
-  requireRole("admin"),
+  requireRole('admin'),
   getDepartmentReport
 );
 
@@ -38,14 +38,14 @@ router.get(
  * @desc    Get student performance report
  * @access  Private (Student: own report, Supervisor: supervised students, Admin: all)
  */
-router.get("/student/:studentId", authenticateToken, getStudentReport);
+router.get('/student/:studentId', authenticateToken, getStudentReport);
 
 /**
  * @route   GET /api/reports/supervisor/:supervisorId
  * @desc    Get supervisor performance report
  * @access  Private (Supervisor: own report, Admin: all)
  */
-router.get("/supervisor/:supervisorId", authenticateToken, getSupervisorReport);
+router.get('/supervisor/:supervisorId', authenticateToken, getSupervisorReport);
 
 /**
  * @route   GET /api/reports/timeline
@@ -54,9 +54,9 @@ router.get("/supervisor/:supervisorId", authenticateToken, getSupervisorReport);
  * @query   startDate, endDate
  */
 router.get(
-  "/timeline",
+  '/timeline',
   authenticateToken,
-  requireRole("admin"),
+  requireRole('admin'),
   getTimelineReport
 );
 

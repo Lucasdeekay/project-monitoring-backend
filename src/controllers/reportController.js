@@ -1,4 +1,4 @@
-const { query } = require("../config/database");
+const { query } = require('../config/database');
 
 /**
  * Get overall system statistics
@@ -8,16 +8,16 @@ const getDashboardStats = async (req, res) => {
   try {
     // Total counts
     const [projectCount] = await query(
-      "SELECT COUNT(*) as count FROM projects"
+      'SELECT COUNT(*) as count FROM projects'
     );
-    const [userCount] = await query("SELECT COUNT(*) as count FROM users");
+    const [userCount] = await query('SELECT COUNT(*) as count FROM users');
     const [studentCount] = await query(
-      "SELECT COUNT(*) as count FROM users WHERE role = ?",
-      ["student"]
+      'SELECT COUNT(*) as count FROM users WHERE role = ?',
+      ['student']
     );
     const [supervisorCount] = await query(
-      "SELECT COUNT(*) as count FROM users WHERE role = ?",
-      ["supervisor"]
+      'SELECT COUNT(*) as count FROM users WHERE role = ?',
+      ['supervisor']
     );
 
     // Projects by status
@@ -79,11 +79,11 @@ const getDashboardStats = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Get dashboard stats error:", error);
+    console.error('Get dashboard stats error:', error);
     res.status(500).json({
       success: false,
-      message: "Failed to retrieve dashboard statistics.",
-      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+      message: 'Failed to retrieve dashboard statistics.',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
     });
   }
 };
@@ -98,20 +98,20 @@ const getDepartmentReport = async (req, res) => {
 
     // Total projects in department
     const [projectCount] = await query(
-      "SELECT COUNT(*) as count FROM projects WHERE department = ?",
+      'SELECT COUNT(*) as count FROM projects WHERE department = ?',
       [department]
     );
 
     // Students in department
     const [studentCount] = await query(
-      "SELECT COUNT(*) as count FROM users WHERE department = ? AND role = ?",
-      [department, "student"]
+      'SELECT COUNT(*) as count FROM users WHERE department = ? AND role = ?',
+      [department, 'student']
     );
 
     // Supervisors in department
     const [supervisorCount] = await query(
-      "SELECT COUNT(*) as count FROM users WHERE department = ? AND role = ?",
-      [department, "supervisor"]
+      'SELECT COUNT(*) as count FROM users WHERE department = ? AND role = ?',
+      [department, 'supervisor']
     );
 
     // Projects by status
@@ -169,11 +169,11 @@ const getDepartmentReport = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Get department report error:", error);
+    console.error('Get department report error:', error);
     res.status(500).json({
       success: false,
-      message: "Failed to retrieve department report.",
-      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+      message: 'Failed to retrieve department report.',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
     });
   }
 };
@@ -188,14 +188,14 @@ const getStudentReport = async (req, res) => {
 
     // Get student info
     const students = await query(
-      "SELECT id, name, email, matric_number, department FROM users WHERE id = ? AND role = ?",
-      [studentId, "student"]
+      'SELECT id, name, email, matric_number, department FROM users WHERE id = ? AND role = ?',
+      [studentId, 'student']
     );
 
     if (students.length === 0) {
       return res.status(404).json({
         success: false,
-        message: "Student not found.",
+        message: 'Student not found.',
       });
     }
 
@@ -287,11 +287,11 @@ const getStudentReport = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Get student report error:", error);
+    console.error('Get student report error:', error);
     res.status(500).json({
       success: false,
-      message: "Failed to retrieve student report.",
-      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+      message: 'Failed to retrieve student report.',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
     });
   }
 };
@@ -306,14 +306,14 @@ const getSupervisorReport = async (req, res) => {
 
     // Get supervisor info
     const supervisors = await query(
-      "SELECT id, name, email, title, department, specialization FROM users WHERE id = ? AND role = ?",
-      [supervisorId, "supervisor"]
+      'SELECT id, name, email, title, department, specialization FROM users WHERE id = ? AND role = ?',
+      [supervisorId, 'supervisor']
     );
 
     if (supervisors.length === 0) {
       return res.status(404).json({
         success: false,
-        message: "Supervisor not found.",
+        message: 'Supervisor not found.',
       });
     }
 
@@ -321,7 +321,7 @@ const getSupervisorReport = async (req, res) => {
 
     // Get supervised projects
     const [projectCount] = await query(
-      "SELECT COUNT(*) as count FROM projects WHERE supervisor_id = ?",
+      'SELECT COUNT(*) as count FROM projects WHERE supervisor_id = ?',
       [supervisorId]
     );
 
@@ -338,13 +338,13 @@ const getSupervisorReport = async (req, res) => {
 
     // Get feedback given
     const [feedbackCount] = await query(
-      "SELECT COUNT(*) as count FROM feedback WHERE supervisor_id = ?",
+      'SELECT COUNT(*) as count FROM feedback WHERE supervisor_id = ?',
       [supervisorId]
     );
 
     // Get evaluations completed
     const [evaluationCount] = await query(
-      "SELECT COUNT(*) as count FROM evaluations WHERE evaluator_id = ?",
+      'SELECT COUNT(*) as count FROM evaluations WHERE evaluator_id = ?',
       [supervisorId]
     );
 
@@ -400,11 +400,11 @@ const getSupervisorReport = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Get supervisor report error:", error);
+    console.error('Get supervisor report error:', error);
     res.status(500).json({
       success: false,
-      message: "Failed to retrieve supervisor report.",
-      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+      message: 'Failed to retrieve supervisor report.',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
     });
   }
 };
@@ -417,11 +417,11 @@ const getTimelineReport = async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
 
-    let dateFilter = "";
+    let dateFilter = '';
     const params = [];
 
     if (startDate && endDate) {
-      dateFilter = "WHERE p.created_at BETWEEN ? AND ?";
+      dateFilter = 'WHERE created_at BETWEEN ? AND ?';
       params.push(startDate, endDate);
     }
 
@@ -441,6 +441,7 @@ const getTimelineReport = async (req, res) => {
     );
 
     // Submissions over time
+    const submissionParams = startDate && endDate ? [startDate, endDate] : [];
     const submissionTimeline = await query(
       `
       SELECT 
@@ -448,12 +449,12 @@ const getTimelineReport = async (req, res) => {
         COUNT(*) as count
       FROM projects
       WHERE submission_date IS NOT NULL
-      ${startDate && endDate ? "AND submission_date BETWEEN ? AND ?" : ""}
+      ${startDate && endDate ? 'AND submission_date BETWEEN ? AND ?' : ''}
       GROUP BY DATE(submission_date)
       ORDER BY date DESC
       LIMIT 30
     `,
-      params
+      submissionParams
     );
 
     res.json({
@@ -470,11 +471,11 @@ const getTimelineReport = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Get timeline report error:", error);
+    console.error('Get timeline report error:', error);
     res.status(500).json({
       success: false,
-      message: "Failed to retrieve timeline report.",
-      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+      message: 'Failed to retrieve timeline report.',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
     });
   }
 };

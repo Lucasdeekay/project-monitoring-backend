@@ -1,4 +1,13 @@
-const { query } = require("../config/database");
+const { query } = require('../config/database');
+
+const safeJsonParse = (str, defaultValue = null) => {
+  if (!str) return defaultValue;
+  try {
+    return JSON.parse(str);
+  } catch {
+    return defaultValue;
+  }
+};
 
 /**
  * Get evaluations for a project
@@ -9,36 +18,36 @@ const getEvaluationsByProject = async (req, res) => {
     const { projectId } = req.params;
 
     // Get project to check authorization
-    const projects = await query("SELECT * FROM projects WHERE id = ?", [
+    const projects = await query('SELECT * FROM projects WHERE id = ?', [
       projectId,
     ]);
 
     if (projects.length === 0) {
       return res.status(404).json({
         success: false,
-        message: "Project not found.",
+        message: 'Project not found.',
       });
     }
 
     const project = projects[0];
 
     // Authorization check
-    if (req.user.role === "student" && project.student_id !== req.user.id) {
+    if (req.user.role === 'student' && project.student_id !== req.user.id) {
       return res.status(403).json({
         success: false,
         message:
-          "Access denied. You can only view evaluations for your own projects.",
+          'Access denied. You can only view evaluations for your own projects.',
       });
     }
 
     if (
-      req.user.role === "supervisor" &&
+      req.user.role === 'supervisor' &&
       project.supervisor_id !== req.user.id
     ) {
       return res.status(403).json({
         success: false,
         message:
-          "Access denied. You can only view evaluations for projects you supervise.",
+          'Access denied. You can only view evaluations for projects you supervise.',
       });
     }
 
@@ -68,7 +77,7 @@ const getEvaluationsByProject = async (req, res) => {
         evaluatorEmail: e.evaluator_email,
         evaluatorTitle: e.evaluator_title,
         evaluatorRole: e.evaluator_role,
-        criteria: JSON.parse(e.criteria),
+        criteria: safeJsonParse(e.criteria, []),
         totalScore: e.total_score,
         maxTotalScore: e.max_total_score,
         grade: e.grade,
@@ -78,11 +87,11 @@ const getEvaluationsByProject = async (req, res) => {
       })),
     });
   } catch (error) {
-    console.error("Get evaluations error:", error);
+    console.error('Get evaluations error:', error);
     res.status(500).json({
       success: false,
-      message: "Failed to retrieve evaluations.",
-      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+      message: 'Failed to retrieve evaluations.',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
     });
   }
 };
@@ -115,27 +124,27 @@ const getEvaluationById = async (req, res) => {
     if (evaluations.length === 0) {
       return res.status(404).json({
         success: false,
-        message: "Evaluation not found.",
+        message: 'Evaluation not found.',
       });
     }
 
     const evaluation = evaluations[0];
 
     // Authorization check
-    if (req.user.role === "student" && evaluation.student_id !== req.user.id) {
+    if (req.user.role === 'student' && evaluation.student_id !== req.user.id) {
       return res.status(403).json({
         success: false,
-        message: "Access denied.",
+        message: 'Access denied.',
       });
     }
 
     if (
-      req.user.role === "supervisor" &&
+      req.user.role === 'supervisor' &&
       evaluation.evaluator_id !== req.user.id
     ) {
       return res.status(403).json({
         success: false,
-        message: "Access denied.",
+        message: 'Access denied.',
       });
     }
 
@@ -150,7 +159,7 @@ const getEvaluationById = async (req, res) => {
         evaluatorEmail: evaluation.evaluator_email,
         evaluatorTitle: evaluation.evaluator_title,
         evaluatorRole: evaluation.evaluator_role,
-        criteria: JSON.parse(evaluation.criteria),
+        criteria: safeJsonParse(evaluation.criteria, []),
         totalScore: evaluation.total_score,
         maxTotalScore: evaluation.max_total_score,
         grade: evaluation.grade,
@@ -160,11 +169,11 @@ const getEvaluationById = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Get evaluation error:", error);
+    console.error('Get evaluation error:', error);
     res.status(500).json({
       success: false,
-      message: "Failed to retrieve evaluation.",
-      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+      message: 'Failed to retrieve evaluation.',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
     });
   }
 };
@@ -181,7 +190,7 @@ const createEvaluation = async (req, res) => {
     if (!projectId || !criteria || !Array.isArray(criteria)) {
       return res.status(400).json({
         success: false,
-        message: "Please provide projectId and criteria array.",
+        message: 'Please provide projectId and criteria array.',
       });
     }
 
@@ -194,7 +203,7 @@ const createEvaluation = async (req, res) => {
       ) {
         return res.status(400).json({
           success: false,
-          message: "Each criterion must have name, score, and maxScore.",
+          message: 'Each criterion must have name, score, and maxScore.',
         });
       }
 
@@ -207,14 +216,14 @@ const createEvaluation = async (req, res) => {
     }
 
     // Get project to verify
-    const projects = await query("SELECT * FROM projects WHERE id = ?", [
+    const projects = await query('SELECT * FROM projects WHERE id = ?', [
       projectId,
     ]);
 
     if (projects.length === 0) {
       return res.status(404).json({
         success: false,
-        message: "Project not found.",
+        message: 'Project not found.',
       });
     }
 
@@ -222,20 +231,20 @@ const createEvaluation = async (req, res) => {
 
     // Only the assigned supervisor or admin can evaluate
     if (
-      req.user.role === "supervisor" &&
+      req.user.role === 'supervisor' &&
       project.supervisor_id !== req.user.id
     ) {
       return res.status(403).json({
         success: false,
-        message: "Access denied. You can only evaluate projects you supervise.",
+        message: 'Access denied. You can only evaluate projects you supervise.',
       });
     }
 
     // Check if project has been submitted
-    if (project.status !== "submitted" && project.status !== "under_review") {
+    if (project.status !== 'submitted' && project.status !== 'under_review') {
       return res.status(400).json({
         success: false,
-        message: "Project must be submitted before evaluation.",
+        message: 'Project must be submitted before evaluation.',
       });
     }
 
@@ -246,12 +255,12 @@ const createEvaluation = async (req, res) => {
     // Calculate grade
     const percentage = (totalScore / maxTotalScore) * 100;
     let grade;
-    if (percentage >= 70) grade = "A";
-    else if (percentage >= 60) grade = "B";
-    else if (percentage >= 50) grade = "C";
-    else if (percentage >= 45) grade = "D";
-    else if (percentage >= 40) grade = "E";
-    else grade = "F";
+    if (percentage >= 70) grade = 'A';
+    else if (percentage >= 60) grade = 'B';
+    else if (percentage >= 50) grade = 'C';
+    else if (percentage >= 45) grade = 'D';
+    else if (percentage >= 40) grade = 'E';
+    else grade = 'F';
 
     // Create evaluation
     const result = await query(
@@ -272,8 +281,8 @@ const createEvaluation = async (req, res) => {
     );
 
     // Update project status to approved
-    await query("UPDATE projects SET status = ? WHERE id = ?", [
-      "approved",
+    await query('UPDATE projects SET status = ? WHERE id = ?', [
+      'approved',
       projectId,
     ]);
 
@@ -284,7 +293,7 @@ const createEvaluation = async (req, res) => {
        VALUES (?, 'evaluation', ?, ?, ?)`,
       [
         project.student_id,
-        "Project Evaluated",
+        'Project Evaluated',
         `Your project "${project.title}" has been evaluated. Grade: ${grade}`,
         `/student/projects/${projectId}`,
       ]
@@ -303,14 +312,14 @@ const createEvaluation = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: "Evaluation created successfully.",
+      message: 'Evaluation created successfully.',
       data: {
         id: evaluation.id,
         projectId: evaluation.project_id,
         evaluatorId: evaluation.evaluator_id,
         evaluatorName: evaluation.evaluator_name,
         evaluatorRole: evaluation.evaluator_role,
-        criteria: JSON.parse(evaluation.criteria),
+        criteria: safeJsonParse(evaluation.criteria, []),
         totalScore: evaluation.total_score,
         maxTotalScore: evaluation.max_total_score,
         grade: evaluation.grade,
@@ -321,11 +330,11 @@ const createEvaluation = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Create evaluation error:", error);
+    console.error('Create evaluation error:', error);
     res.status(500).json({
       success: false,
-      message: "Failed to create evaluation.",
-      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+      message: 'Failed to create evaluation.',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
     });
   }
 };
@@ -340,24 +349,24 @@ const updateEvaluation = async (req, res) => {
     const { criteria, generalComment } = req.body;
 
     // Get evaluation
-    const evaluations = await query("SELECT * FROM evaluations WHERE id = ?", [
+    const evaluations = await query('SELECT * FROM evaluations WHERE id = ?', [
       id,
     ]);
 
     if (evaluations.length === 0) {
       return res.status(404).json({
         success: false,
-        message: "Evaluation not found.",
+        message: 'Evaluation not found.',
       });
     }
 
     const evaluation = evaluations[0];
 
     // Only the evaluator who created it or admin can update
-    if (evaluation.evaluator_id !== req.user.id && req.user.role !== "admin") {
+    if (evaluation.evaluator_id !== req.user.id && req.user.role !== 'admin') {
       return res.status(403).json({
         success: false,
-        message: "Access denied. You can only update your own evaluations.",
+        message: 'Access denied. You can only update your own evaluations.',
       });
     }
 
@@ -374,7 +383,7 @@ const updateEvaluation = async (req, res) => {
         ) {
           return res.status(400).json({
             success: false,
-            message: "Each criterion must have name, score, and maxScore.",
+            message: 'Each criterion must have name, score, and maxScore.',
           });
         }
       }
@@ -386,38 +395,38 @@ const updateEvaluation = async (req, res) => {
 
       // Recalculate grade
       let grade;
-      if (percentage >= 70) grade = "A";
-      else if (percentage >= 60) grade = "B";
-      else if (percentage >= 50) grade = "C";
-      else if (percentage >= 45) grade = "D";
-      else if (percentage >= 40) grade = "E";
-      else grade = "F";
+      if (percentage >= 70) grade = 'A';
+      else if (percentage >= 60) grade = 'B';
+      else if (percentage >= 50) grade = 'C';
+      else if (percentage >= 45) grade = 'D';
+      else if (percentage >= 40) grade = 'E';
+      else grade = 'F';
 
       updates.push(
-        "criteria = ?",
-        "total_score = ?",
-        "max_total_score = ?",
-        "grade = ?"
+        'criteria = ?',
+        'total_score = ?',
+        'max_total_score = ?',
+        'grade = ?'
       );
       values.push(JSON.stringify(criteria), totalScore, maxTotalScore, grade);
     }
 
     if (generalComment !== undefined) {
-      updates.push("general_comment = ?");
+      updates.push('general_comment = ?');
       values.push(generalComment);
     }
 
     if (updates.length === 0) {
       return res.status(400).json({
         success: false,
-        message: "No fields to update.",
+        message: 'No fields to update.',
       });
     }
 
     values.push(id);
 
     await query(
-      `UPDATE evaluations SET ${updates.join(", ")} WHERE id = ?`,
+      `UPDATE evaluations SET ${updates.join(', ')} WHERE id = ?`,
       values
     );
 
@@ -434,14 +443,14 @@ const updateEvaluation = async (req, res) => {
 
     res.json({
       success: true,
-      message: "Evaluation updated successfully.",
+      message: 'Evaluation updated successfully.',
       data: {
         id: updatedEvaluation.id,
         projectId: updatedEvaluation.project_id,
         evaluatorId: updatedEvaluation.evaluator_id,
         evaluatorName: updatedEvaluation.evaluator_name,
         evaluatorRole: updatedEvaluation.evaluator_role,
-        criteria: JSON.parse(updatedEvaluation.criteria),
+        criteria: safeJsonParse(updatedEvaluation.criteria, []),
         totalScore: updatedEvaluation.total_score,
         maxTotalScore: updatedEvaluation.max_total_score,
         grade: updatedEvaluation.grade,
@@ -451,11 +460,11 @@ const updateEvaluation = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Update evaluation error:", error);
+    console.error('Update evaluation error:', error);
     res.status(500).json({
       success: false,
-      message: "Failed to update evaluation.",
-      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+      message: 'Failed to update evaluation.',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
     });
   }
 };
@@ -469,39 +478,39 @@ const deleteEvaluation = async (req, res) => {
     const { id } = req.params;
 
     // Get evaluation
-    const evaluations = await query("SELECT * FROM evaluations WHERE id = ?", [
+    const evaluations = await query('SELECT * FROM evaluations WHERE id = ?', [
       id,
     ]);
 
     if (evaluations.length === 0) {
       return res.status(404).json({
         success: false,
-        message: "Evaluation not found.",
+        message: 'Evaluation not found.',
       });
     }
 
     const evaluation = evaluations[0];
 
     // Only admin can delete evaluations
-    if (req.user.role !== "admin") {
+    if (req.user.role !== 'admin') {
       return res.status(403).json({
         success: false,
-        message: "Only administrators can delete evaluations.",
+        message: 'Only administrators can delete evaluations.',
       });
     }
 
-    await query("DELETE FROM evaluations WHERE id = ?", [id]);
+    await query('DELETE FROM evaluations WHERE id = ?', [id]);
 
     res.json({
       success: true,
-      message: "Evaluation deleted successfully.",
+      message: 'Evaluation deleted successfully.',
     });
   } catch (error) {
-    console.error("Delete evaluation error:", error);
+    console.error('Delete evaluation error:', error);
     res.status(500).json({
       success: false,
-      message: "Failed to delete evaluation.",
-      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+      message: 'Failed to delete evaluation.',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
     });
   }
 };

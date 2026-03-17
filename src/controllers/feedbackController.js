@@ -1,4 +1,4 @@
-const { query } = require("../config/database");
+const { query } = require('../config/database');
 
 /**
  * Get all feedback for a project
@@ -9,36 +9,36 @@ const getFeedbackByProject = async (req, res) => {
     const { projectId } = req.params;
 
     // Get project to check authorization
-    const projects = await query("SELECT * FROM projects WHERE id = ?", [
+    const projects = await query('SELECT * FROM projects WHERE id = ?', [
       projectId,
     ]);
 
     if (projects.length === 0) {
       return res.status(404).json({
         success: false,
-        message: "Project not found.",
+        message: 'Project not found.',
       });
     }
 
     const project = projects[0];
 
     // Authorization check
-    if (req.user.role === "student" && project.student_id !== req.user.id) {
+    if (req.user.role === 'student' && project.student_id !== req.user.id) {
       return res.status(403).json({
         success: false,
         message:
-          "Access denied. You can only view feedback for your own projects.",
+          'Access denied. You can only view feedback for your own projects.',
       });
     }
 
     if (
-      req.user.role === "supervisor" &&
+      req.user.role === 'supervisor' &&
       project.supervisor_id !== req.user.id
     ) {
       return res.status(403).json({
         success: false,
         message:
-          "Access denied. You can only view feedback for projects you supervise.",
+          'Access denied. You can only view feedback for projects you supervise.',
       });
     }
 
@@ -76,11 +76,11 @@ const getFeedbackByProject = async (req, res) => {
       })),
     });
   } catch (error) {
-    console.error("Get feedback error:", error);
+    console.error('Get feedback error:', error);
     res.status(500).json({
       success: false,
-      message: "Failed to retrieve feedback.",
-      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+      message: 'Failed to retrieve feedback.',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
     });
   }
 };
@@ -113,33 +113,33 @@ const getFeedbackById = async (req, res) => {
     if (feedbackList.length === 0) {
       return res.status(404).json({
         success: false,
-        message: "Feedback not found.",
+        message: 'Feedback not found.',
       });
     }
 
     const feedback = feedbackList[0];
 
     // Authorization check
-    if (req.user.role === "student" && feedback.student_id !== req.user.id) {
+    if (req.user.role === 'student' && feedback.student_id !== req.user.id) {
       return res.status(403).json({
         success: false,
-        message: "Access denied.",
+        message: 'Access denied.',
       });
     }
 
     if (
-      req.user.role === "supervisor" &&
+      req.user.role === 'supervisor' &&
       feedback.supervisor_id !== req.user.id
     ) {
       return res.status(403).json({
         success: false,
-        message: "Access denied.",
+        message: 'Access denied.',
       });
     }
 
     // Mark as read if student is viewing
-    if (req.user.role === "student" && feedback.status === "unread") {
-      await query("UPDATE feedback SET status = ? WHERE id = ?", ["read", id]);
+    if (req.user.role === 'student' && feedback.status === 'unread') {
+      await query('UPDATE feedback SET status = ? WHERE id = ?', ['read', id]);
     }
 
     res.json({
@@ -161,11 +161,11 @@ const getFeedbackById = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Get feedback error:", error);
+    console.error('Get feedback error:', error);
     res.status(500).json({
       success: false,
-      message: "Failed to retrieve feedback.",
-      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+      message: 'Failed to retrieve feedback.',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
     });
   }
 };
@@ -182,7 +182,7 @@ const createFeedback = async (req, res) => {
     if (!projectId || !subject || !message) {
       return res.status(400).json({
         success: false,
-        message: "Please provide projectId, subject, and message.",
+        message: 'Please provide projectId, subject, and message.',
       });
     }
 
@@ -190,19 +190,19 @@ const createFeedback = async (req, res) => {
     if (rating && (rating < 1 || rating > 5)) {
       return res.status(400).json({
         success: false,
-        message: "Rating must be between 1 and 5.",
+        message: 'Rating must be between 1 and 5.',
       });
     }
 
     // Get project to verify supervisor
-    const projects = await query("SELECT * FROM projects WHERE id = ?", [
+    const projects = await query('SELECT * FROM projects WHERE id = ?', [
       projectId,
     ]);
 
     if (projects.length === 0) {
       return res.status(404).json({
         success: false,
-        message: "Project not found.",
+        message: 'Project not found.',
       });
     }
 
@@ -210,13 +210,13 @@ const createFeedback = async (req, res) => {
 
     // Only the assigned supervisor can give feedback
     if (
-      req.user.role === "supervisor" &&
+      req.user.role === 'supervisor' &&
       project.supervisor_id !== req.user.id
     ) {
       return res.status(403).json({
         success: false,
         message:
-          "Access denied. You can only provide feedback for projects you supervise.",
+          'Access denied. You can only provide feedback for projects you supervise.',
       });
     }
 
@@ -228,7 +228,7 @@ const createFeedback = async (req, res) => {
       [
         projectId,
         req.user.id,
-        type || "general",
+        type || 'general',
         subject,
         message,
         rating || null,
@@ -242,7 +242,7 @@ const createFeedback = async (req, res) => {
        VALUES (?, 'feedback', ?, ?, ?)`,
       [
         project.student_id,
-        "New Feedback Received",
+        'New Feedback Received',
         `You have received feedback on "${project.title}"`,
         `/student/projects/${projectId}`,
       ]
@@ -261,7 +261,7 @@ const createFeedback = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: "Feedback created successfully.",
+      message: 'Feedback created successfully.',
       data: {
         id: feedback.id,
         projectId: feedback.project_id,
@@ -276,11 +276,11 @@ const createFeedback = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Create feedback error:", error);
+    console.error('Create feedback error:', error);
     res.status(500).json({
       success: false,
-      message: "Failed to create feedback.",
-      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+      message: 'Failed to create feedback.',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
     });
   }
 };
@@ -295,24 +295,24 @@ const updateFeedback = async (req, res) => {
     const { subject, message, rating, type } = req.body;
 
     // Get feedback
-    const feedbackList = await query("SELECT * FROM feedback WHERE id = ?", [
+    const feedbackList = await query('SELECT * FROM feedback WHERE id = ?', [
       id,
     ]);
 
     if (feedbackList.length === 0) {
       return res.status(404).json({
         success: false,
-        message: "Feedback not found.",
+        message: 'Feedback not found.',
       });
     }
 
     const feedback = feedbackList[0];
 
     // Only the supervisor who created the feedback can update it
-    if (feedback.supervisor_id !== req.user.id && req.user.role !== "admin") {
+    if (feedback.supervisor_id !== req.user.id && req.user.role !== 'admin') {
       return res.status(403).json({
         success: false,
-        message: "Access denied. You can only update your own feedback.",
+        message: 'Access denied. You can only update your own feedback.',
       });
     }
 
@@ -321,39 +321,39 @@ const updateFeedback = async (req, res) => {
     const values = [];
 
     if (subject) {
-      updates.push("subject = ?");
+      updates.push('subject = ?');
       values.push(subject);
     }
     if (message) {
-      updates.push("message = ?");
+      updates.push('message = ?');
       values.push(message);
     }
     if (rating !== undefined) {
       if (rating < 1 || rating > 5) {
         return res.status(400).json({
           success: false,
-          message: "Rating must be between 1 and 5.",
+          message: 'Rating must be between 1 and 5.',
         });
       }
-      updates.push("rating = ?");
+      updates.push('rating = ?');
       values.push(rating);
     }
     if (type) {
-      updates.push("type = ?");
+      updates.push('type = ?');
       values.push(type);
     }
 
     if (updates.length === 0) {
       return res.status(400).json({
         success: false,
-        message: "No fields to update.",
+        message: 'No fields to update.',
       });
     }
 
     values.push(id);
 
     await query(
-      `UPDATE feedback SET ${updates.join(", ")} WHERE id = ?`,
+      `UPDATE feedback SET ${updates.join(', ')} WHERE id = ?`,
       values
     );
 
@@ -368,7 +368,7 @@ const updateFeedback = async (req, res) => {
 
     res.json({
       success: true,
-      message: "Feedback updated successfully.",
+      message: 'Feedback updated successfully.',
       data: {
         id: updatedFeedback[0].id,
         projectId: updatedFeedback[0].project_id,
@@ -383,11 +383,11 @@ const updateFeedback = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Update feedback error:", error);
+    console.error('Update feedback error:', error);
     res.status(500).json({
       success: false,
-      message: "Failed to update feedback.",
-      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+      message: 'Failed to update feedback.',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
     });
   }
 };
@@ -401,39 +401,39 @@ const deleteFeedback = async (req, res) => {
     const { id } = req.params;
 
     // Get feedback
-    const feedbackList = await query("SELECT * FROM feedback WHERE id = ?", [
+    const feedbackList = await query('SELECT * FROM feedback WHERE id = ?', [
       id,
     ]);
 
     if (feedbackList.length === 0) {
       return res.status(404).json({
         success: false,
-        message: "Feedback not found.",
+        message: 'Feedback not found.',
       });
     }
 
     const feedback = feedbackList[0];
 
     // Only the supervisor who created the feedback or admin can delete it
-    if (feedback.supervisor_id !== req.user.id && req.user.role !== "admin") {
+    if (feedback.supervisor_id !== req.user.id && req.user.role !== 'admin') {
       return res.status(403).json({
         success: false,
-        message: "Access denied. You can only delete your own feedback.",
+        message: 'Access denied. You can only delete your own feedback.',
       });
     }
 
-    await query("DELETE FROM feedback WHERE id = ?", [id]);
+    await query('DELETE FROM feedback WHERE id = ?', [id]);
 
     res.json({
       success: true,
-      message: "Feedback deleted successfully.",
+      message: 'Feedback deleted successfully.',
     });
   } catch (error) {
-    console.error("Delete feedback error:", error);
+    console.error('Delete feedback error:', error);
     res.status(500).json({
       success: false,
-      message: "Failed to delete feedback.",
-      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+      message: 'Failed to delete feedback.',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
     });
   }
 };
@@ -457,32 +457,32 @@ const markAsRead = async (req, res) => {
     if (feedbackList.length === 0) {
       return res.status(404).json({
         success: false,
-        message: "Feedback not found.",
+        message: 'Feedback not found.',
       });
     }
 
     const feedback = feedbackList[0];
 
     // Only the student can mark feedback as read
-    if (req.user.role !== "student" || feedback.student_id !== req.user.id) {
+    if (req.user.role !== 'student' || feedback.student_id !== req.user.id) {
       return res.status(403).json({
         success: false,
-        message: "Access denied.",
+        message: 'Access denied.',
       });
     }
 
-    await query("UPDATE feedback SET status = ? WHERE id = ?", ["read", id]);
+    await query('UPDATE feedback SET status = ? WHERE id = ?', ['read', id]);
 
     res.json({
       success: true,
-      message: "Feedback marked as read.",
+      message: 'Feedback marked as read.',
     });
   } catch (error) {
-    console.error("Mark as read error:", error);
+    console.error('Mark as read error:', error);
     res.status(500).json({
       success: false,
-      message: "Failed to mark feedback as read.",
-      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+      message: 'Failed to mark feedback as read.',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
     });
   }
 };

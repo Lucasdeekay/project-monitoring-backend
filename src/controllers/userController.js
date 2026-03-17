@@ -1,5 +1,5 @@
-const bcrypt = require("bcryptjs");
-const { query } = require("../config/database");
+const bcrypt = require('bcryptjs');
+const { query } = require('../config/database');
 
 /**
  * Get all users (with filters)
@@ -16,22 +16,22 @@ const getAllUsers = async (req, res) => {
     const params = [];
 
     if (role) {
-      conditions.push("role = ?");
+      conditions.push('role = ?');
       params.push(role);
     }
 
     if (department) {
-      conditions.push("department = ?");
+      conditions.push('department = ?');
       params.push(department);
     }
 
     if (search) {
-      conditions.push("(name LIKE ? OR email LIKE ? OR matric_number LIKE ?)");
+      conditions.push('(name LIKE ? OR email LIKE ? OR matric_number LIKE ?)');
       params.push(`%${search}%`, `%${search}%`, `%${search}%`);
     }
 
     const whereClause =
-      conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+      conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
     // Get total count
     const countQuery = `SELECT COUNT(*) as total FROM users ${whereClause}`;
@@ -76,11 +76,11 @@ const getAllUsers = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Get users error:", error);
+    console.error('Get users error:', error);
     res.status(500).json({
       success: false,
-      message: "Failed to retrieve users.",
-      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+      message: 'Failed to retrieve users.',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
     });
   }
 };
@@ -104,7 +104,7 @@ const getUserById = async (req, res) => {
     if (users.length === 0) {
       return res.status(404).json({
         success: false,
-        message: "User not found.",
+        message: 'User not found.',
       });
     }
 
@@ -113,9 +113,9 @@ const getUserById = async (req, res) => {
     // Get additional stats based on role
     let stats = {};
 
-    if (user.role === "student") {
+    if (user.role === 'student') {
       const [projectCount] = await query(
-        "SELECT COUNT(*) as count FROM projects WHERE student_id = ?",
+        'SELECT COUNT(*) as count FROM projects WHERE student_id = ?',
         [id]
       );
       const [feedbackCount] = await query(
@@ -128,17 +128,17 @@ const getUserById = async (req, res) => {
         projectCount: projectCount.count,
         feedbackReceived: feedbackCount.count,
       };
-    } else if (user.role === "supervisor") {
+    } else if (user.role === 'supervisor') {
       const [projectCount] = await query(
-        "SELECT COUNT(*) as count FROM projects WHERE supervisor_id = ?",
+        'SELECT COUNT(*) as count FROM projects WHERE supervisor_id = ?',
         [id]
       );
       const [feedbackCount] = await query(
-        "SELECT COUNT(*) as count FROM feedback WHERE supervisor_id = ?",
+        'SELECT COUNT(*) as count FROM feedback WHERE supervisor_id = ?',
         [id]
       );
       const [evaluationCount] = await query(
-        "SELECT COUNT(*) as count FROM evaluations WHERE evaluator_id = ?",
+        'SELECT COUNT(*) as count FROM evaluations WHERE evaluator_id = ?',
         [id]
       );
       stats = {
@@ -168,11 +168,11 @@ const getUserById = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Get user error:", error);
+    console.error('Get user error:', error);
     res.status(500).json({
       success: false,
-      message: "Failed to retrieve user.",
-      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+      message: 'Failed to retrieve user.',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
     });
   }
 };
@@ -200,28 +200,28 @@ const createUser = async (req, res) => {
     if (!name || !email || !password || !role) {
       return res.status(400).json({
         success: false,
-        message: "Please provide name, email, password, and role.",
+        message: 'Please provide name, email, password, and role.',
       });
     }
 
     // Validate role
-    const validRoles = ["student", "supervisor", "admin"];
+    const validRoles = ['student', 'supervisor', 'admin'];
     if (!validRoles.includes(role)) {
       return res.status(400).json({
         success: false,
-        message: "Invalid role.",
+        message: 'Invalid role.',
       });
     }
 
     // Check if email exists
-    const existingUsers = await query("SELECT id FROM users WHERE email = ?", [
+    const existingUsers = await query('SELECT id FROM users WHERE email = ?', [
       email,
     ]);
 
     if (existingUsers.length > 0) {
       return res.status(400).json({
         success: false,
-        message: "User with this email already exists.",
+        message: 'User with this email already exists.',
       });
     }
 
@@ -251,7 +251,7 @@ const createUser = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: "User created successfully.",
+      message: 'User created successfully.',
       data: {
         id: result.insertId,
         name,
@@ -260,11 +260,11 @@ const createUser = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Create user error:", error);
+    console.error('Create user error:', error);
     res.status(500).json({
       success: false,
-      message: "Failed to create user.",
-      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+      message: 'Failed to create user.',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
     });
   }
 };
@@ -289,26 +289,26 @@ const updateUser = async (req, res) => {
     } = req.body;
 
     // Check if user exists
-    const users = await query("SELECT * FROM users WHERE id = ?", [id]);
+    const users = await query('SELECT * FROM users WHERE id = ?', [id]);
 
     if (users.length === 0) {
       return res.status(404).json({
         success: false,
-        message: "User not found.",
+        message: 'User not found.',
       });
     }
 
     // Check if email is being changed to an existing email
     if (email && email !== users[0].email) {
       const existingUsers = await query(
-        "SELECT id FROM users WHERE email = ? AND id != ?",
+        'SELECT id FROM users WHERE email = ? AND id != ?',
         [email, id]
       );
 
       if (existingUsers.length > 0) {
         return res.status(400).json({
           success: false,
-          message: "Email already in use.",
+          message: 'Email already in use.',
         });
       }
     }
@@ -318,59 +318,59 @@ const updateUser = async (req, res) => {
     const values = [];
 
     if (name) {
-      updates.push("name = ?");
+      updates.push('name = ?');
       values.push(name);
     }
     if (email) {
-      updates.push("email = ?");
+      updates.push('email = ?');
       values.push(email);
     }
     if (role) {
-      const validRoles = ["student", "supervisor", "admin"];
+      const validRoles = ['student', 'supervisor', 'admin'];
       if (!validRoles.includes(role)) {
         return res.status(400).json({
           success: false,
-          message: "Invalid role.",
+          message: 'Invalid role.',
         });
       }
-      updates.push("role = ?");
+      updates.push('role = ?');
       values.push(role);
     }
     if (department !== undefined) {
-      updates.push("department = ?");
+      updates.push('department = ?');
       values.push(department);
     }
     if (phone !== undefined) {
-      updates.push("phone = ?");
+      updates.push('phone = ?');
       values.push(phone);
     }
     if (matricNumber !== undefined) {
-      updates.push("matric_number = ?");
+      updates.push('matric_number = ?');
       values.push(matricNumber);
     }
     if (title !== undefined) {
-      updates.push("title = ?");
+      updates.push('title = ?');
       values.push(title);
     }
     if (specialization !== undefined) {
-      updates.push("specialization = ?");
+      updates.push('specialization = ?');
       values.push(specialization);
     }
     if (level !== undefined) {
-      updates.push("level = ?");
+      updates.push('level = ?');
       values.push(level);
     }
 
     if (updates.length === 0) {
       return res.status(400).json({
         success: false,
-        message: "No fields to update.",
+        message: 'No fields to update.',
       });
     }
 
     values.push(id);
 
-    await query(`UPDATE users SET ${updates.join(", ")} WHERE id = ?`, values);
+    await query(`UPDATE users SET ${updates.join(', ')} WHERE id = ?`, values);
 
     // Get updated user
     const updatedUsers = await query(
@@ -382,15 +382,15 @@ const updateUser = async (req, res) => {
 
     res.json({
       success: true,
-      message: "User updated successfully.",
+      message: 'User updated successfully.',
       data: updatedUsers[0],
     });
   } catch (error) {
-    console.error("Update user error:", error);
+    console.error('Update user error:', error);
     res.status(500).json({
       success: false,
-      message: "Failed to update user.",
-      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+      message: 'Failed to update user.',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
     });
   }
 };
@@ -404,12 +404,12 @@ const deleteUser = async (req, res) => {
     const { id } = req.params;
 
     // Check if user exists
-    const users = await query("SELECT * FROM users WHERE id = ?", [id]);
+    const users = await query('SELECT * FROM users WHERE id = ?', [id]);
 
     if (users.length === 0) {
       return res.status(404).json({
         success: false,
-        message: "User not found.",
+        message: 'User not found.',
       });
     }
 
@@ -417,23 +417,23 @@ const deleteUser = async (req, res) => {
     if (parseInt(id) === req.user.id) {
       return res.status(400).json({
         success: false,
-        message: "You cannot delete your own account.",
+        message: 'You cannot delete your own account.',
       });
     }
 
     // Delete user (cascade will handle related records)
-    await query("DELETE FROM users WHERE id = ?", [id]);
+    await query('DELETE FROM users WHERE id = ?', [id]);
 
     res.json({
       success: true,
-      message: "User deleted successfully.",
+      message: 'User deleted successfully.',
     });
   } catch (error) {
-    console.error("Delete user error:", error);
+    console.error('Delete user error:', error);
     res.status(500).json({
       success: false,
-      message: "Failed to delete user.",
-      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+      message: 'Failed to delete user.',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
     });
   }
 };
@@ -465,11 +465,11 @@ const getSupervisorsList = async (req, res) => {
       })),
     });
   } catch (error) {
-    console.error("Get supervisors error:", error);
+    console.error('Get supervisors error:', error);
     res.status(500).json({
       success: false,
-      message: "Failed to retrieve supervisors.",
-      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+      message: 'Failed to retrieve supervisors.',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
     });
   }
 };

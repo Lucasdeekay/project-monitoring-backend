@@ -1,4 +1,4 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
 const {
   getAllUsers,
@@ -7,15 +7,15 @@ const {
   updateUser,
   deleteUser,
   getSupervisorsList,
-} = require("../controllers/userController");
-const { authenticateToken, requireRole } = require("../middleware/auth");
+} = require('../controllers/userController');
+const { authenticateToken, requireRole } = require('../middleware/auth');
 
 /**
  * @route   GET /api/users/supervisors/list
  * @desc    Get list of all supervisors (for dropdowns)
  * @access  Private (Students, Supervisors, Admins)
  */
-router.get("/supervisors/list", authenticateToken, getSupervisorsList);
+router.get('/supervisors/list', authenticateToken, getSupervisorsList);
 
 /**
  * @route   GET /api/users
@@ -23,35 +23,35 @@ router.get("/supervisors/list", authenticateToken, getSupervisorsList);
  * @access  Private (Admins only)
  * @query   role, department, search, page, limit
  */
-router.get("/", authenticateToken, requireRole("admin"), getAllUsers);
+router.get('/', authenticateToken, requireRole('admin'), getAllUsers);
 
 /**
  * @route   GET /api/users/:id
  * @desc    Get user by ID
  * @access  Private (Admins only)
  */
-router.get("/:id", authenticateToken, requireRole("admin"), getUserById);
+router.get('/:id', authenticateToken, requireRole('admin'), getUserById);
 
 /**
  * @route   POST /api/users
  * @desc    Create new user
  * @access  Private (Admins only)
  */
-router.post("/", authenticateToken, requireRole("admin"), createUser);
+router.post('/', authenticateToken, requireRole('admin'), createUser);
 
 /**
  * @route   PUT /api/users/:id
  * @desc    Update user
  * @access  Private (Admins only)
  */
-router.put("/:id", authenticateToken, requireRole("admin"), updateUser);
+router.put('/:id', authenticateToken, requireRole('admin'), updateUser);
 
 /**
  * @route   DELETE /api/users/:id
  * @desc    Delete user
  * @access  Private (Admins only)
  */
-router.delete("/:id", authenticateToken, requireRole("admin"), deleteUser);
+router.delete('/:id', authenticateToken, requireRole('admin'), deleteUser);
 
 /**
  * @route   GET /api/users/statistics/overview
@@ -59,12 +59,12 @@ router.delete("/:id", authenticateToken, requireRole("admin"), deleteUser);
  * @access  Private (Admins only)
  */
 router.get(
-  "/statistics/overview",
+  '/statistics/overview',
   authenticateToken,
-  requireRole("admin"),
+  requireRole('admin'),
   async (req, res) => {
     try {
-      const { query } = require("../config/database");
+      const { query } = require('../config/database');
 
       // Get counts by role
       const roleCounts = await query(`
@@ -92,7 +92,7 @@ router.get(
     `);
 
       // Get total count
-      const [totalCount] = await query("SELECT COUNT(*) as total FROM users");
+      const [totalCount] = await query('SELECT COUNT(*) as total FROM users');
 
       res.json({
         success: true,
@@ -116,12 +116,12 @@ router.get(
         },
       });
     } catch (error) {
-      console.error("Get user statistics error:", error);
+      console.error('Get user statistics error:', error);
       res.status(500).json({
         success: false,
-        message: "Failed to get statistics.",
+        message: 'Failed to get statistics.',
         error:
-          process.env.NODE_ENV === "development" ? error.message : undefined,
+          process.env.NODE_ENV === 'development' ? error.message : undefined,
       });
     }
   }
@@ -133,9 +133,9 @@ router.get(
  * @access  Private (Admins only)
  */
 router.post(
-  "/:id/reset-password",
+  '/:id/reset-password',
   authenticateToken,
-  requireRole("admin"),
+  requireRole('admin'),
   async (req, res) => {
     try {
       const { id } = req.params;
@@ -144,20 +144,20 @@ router.post(
       if (!newPassword || newPassword.length < 6) {
         return res.status(400).json({
           success: false,
-          message: "Password must be at least 6 characters long.",
+          message: 'Password must be at least 6 characters long.',
         });
       }
 
-      const { query } = require("../config/database");
-      const bcrypt = require("bcryptjs");
+      const { query } = require('../config/database');
+      const bcrypt = require('bcryptjs');
 
       // Check if user exists
-      const users = await query("SELECT id FROM users WHERE id = ?", [id]);
+      const users = await query('SELECT id FROM users WHERE id = ?', [id]);
 
       if (users.length === 0) {
         return res.status(404).json({
           success: false,
-          message: "User not found.",
+          message: 'User not found.',
         });
       }
 
@@ -166,22 +166,22 @@ router.post(
       const hashedPassword = await bcrypt.hash(newPassword, salt);
 
       // Update password
-      await query("UPDATE users SET password = ? WHERE id = ?", [
+      await query('UPDATE users SET password = ? WHERE id = ?', [
         hashedPassword,
         id,
       ]);
 
       res.json({
         success: true,
-        message: "Password reset successfully.",
+        message: 'Password reset successfully.',
       });
     } catch (error) {
-      console.error("Reset password error:", error);
+      console.error('Reset password error:', error);
       res.status(500).json({
         success: false,
-        message: "Failed to reset password.",
+        message: 'Failed to reset password.',
         error:
-          process.env.NODE_ENV === "development" ? error.message : undefined,
+          process.env.NODE_ENV === 'development' ? error.message : undefined,
       });
     }
   }
@@ -193,24 +193,24 @@ router.post(
  * @access  Private (Admins only)
  */
 router.get(
-  "/role/:role/count",
+  '/role/:role/count',
   authenticateToken,
-  requireRole("admin"),
+  requireRole('admin'),
   async (req, res) => {
     try {
       const { role } = req.params;
-      const { query } = require("../config/database");
+      const { query } = require('../config/database');
 
-      const validRoles = ["student", "supervisor", "admin"];
+      const validRoles = ['student', 'supervisor', 'admin'];
       if (!validRoles.includes(role)) {
         return res.status(400).json({
           success: false,
-          message: "Invalid role.",
+          message: 'Invalid role.',
         });
       }
 
       const [result] = await query(
-        "SELECT COUNT(*) as count FROM users WHERE role = ?",
+        'SELECT COUNT(*) as count FROM users WHERE role = ?',
         [role]
       );
 
@@ -222,12 +222,12 @@ router.get(
         },
       });
     } catch (error) {
-      console.error("Get role count error:", error);
+      console.error('Get role count error:', error);
       res.status(500).json({
         success: false,
-        message: "Failed to get count.",
+        message: 'Failed to get count.',
         error:
-          process.env.NODE_ENV === "development" ? error.message : undefined,
+          process.env.NODE_ENV === 'development' ? error.message : undefined,
       });
     }
   }

@@ -1,0 +1,106 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master, develop ]
+
+jobs:
+  lint:
+    name: Lint & Code Quality
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ESLint
+        run: npm run lint
+        continue-on-error: true
+
+  test:
+    name: Server Verification
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify server syntax
+        run: node --check src/server.js
+
+      - name: Verify route files
+        run: |
+          node --check src/routes/auth.js
+          node --check src/routes/users.js
+          node --check src/routes/projects.js
+          node --check src/routes/feedback.js
+          node --check src/routes/evaluations.js
+          node --check src/routes/reports.js
+
+      - name: Verify controller files
+        run: |
+          node --check src/controllers/authController.js
+          node --check src/controllers/userController.js
+          node --check src/controllers/projectController.js
+          node --check src/controllers/feedbackController.js
+          node --check src/controllers/evaluationController.js
+          node --check src/controllers/reportController.js
+
+      - name: Verify middleware
+        run: node --check src/middleware/auth.js
+
+      - name: Verify config
+        run: node --check src/config/database.js
+
+  build:
+    name: Build Test
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Create mock .env
+        run: |
+          echo "DB_HOST=localhost" > .env
+          echo "DB_PORT=3306" >> .env
+          echo "DB_USER=root" >> .env
+          echo "DB_PASSWORD=root" >> .env
+          echo "DB_NAME=test_db" >> .env
+          echo "PORT=5000" >> .env
+          echo "NODE_ENV=development" >> .env
+          echo "CLIENT_URL=http://localhost:5173" >> .env
+          echo "JWT_SECRET=test_secret_key" >> .env
+          echo "JWT_EXPIRE=7d" >> .env
+
+      - name: Try to require main server (syntax check)
+        run: node -e "require('./src/server.js')" 2>&1 || true

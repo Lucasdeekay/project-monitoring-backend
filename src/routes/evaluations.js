@@ -1,4 +1,4 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
 const {
   getEvaluationsByProject,
@@ -6,22 +6,22 @@ const {
   createEvaluation,
   updateEvaluation,
   deleteEvaluation,
-} = require("../controllers/evaluationController");
-const { authenticateToken, requireRole } = require("../middleware/auth");
+} = require('../controllers/evaluationController');
+const { authenticateToken, requireRole } = require('../middleware/auth');
 
 /**
  * @route   GET /api/evaluations/project/:projectId
  * @desc    Get all evaluations for a project
  * @access  Private (Student: own project, Supervisor: supervised project, Admin: all)
  */
-router.get("/project/:projectId", authenticateToken, getEvaluationsByProject);
+router.get('/project/:projectId', authenticateToken, getEvaluationsByProject);
 
 /**
  * @route   GET /api/evaluations/:id
  * @desc    Get single evaluation by ID
  * @access  Private (Student: own project evaluation, Supervisor/Admin: any)
  */
-router.get("/:id", authenticateToken, getEvaluationById);
+router.get('/:id', authenticateToken, getEvaluationById);
 
 /**
  * @route   POST /api/evaluations
@@ -29,9 +29,9 @@ router.get("/:id", authenticateToken, getEvaluationById);
  * @access  Private (Supervisors and Admins only)
  */
 router.post(
-  "/",
+  '/',
   authenticateToken,
-  requireRole("supervisor", "admin"),
+  requireRole('supervisor', 'admin'),
   createEvaluation
 );
 
@@ -41,9 +41,9 @@ router.post(
  * @access  Private (Evaluator who created it, Admin)
  */
 router.put(
-  "/:id",
+  '/:id',
   authenticateToken,
-  requireRole("supervisor", "admin"),
+  requireRole('supervisor', 'admin'),
   updateEvaluation
 );
 
@@ -53,9 +53,9 @@ router.put(
  * @access  Private (Admins only)
  */
 router.delete(
-  "/:id",
+  '/:id',
   authenticateToken,
-  requireRole("admin"),
+  requireRole('admin'),
   deleteEvaluation
 );
 
@@ -65,12 +65,12 @@ router.delete(
  * @access  Private (Admins only)
  */
 router.get(
-  "/statistics/summary",
+  '/statistics/summary',
   authenticateToken,
-  requireRole("admin"),
+  requireRole('admin'),
   async (req, res) => {
     try {
-      const { query } = require("../config/database");
+      const { query } = require('../config/database');
 
       // Get grade distribution
       const gradeDistribution = await query(`
@@ -131,12 +131,12 @@ router.get(
         },
       });
     } catch (error) {
-      console.error("Get evaluation statistics error:", error);
+      console.error('Get evaluation statistics error:', error);
       res.status(500).json({
         success: false,
-        message: "Failed to get statistics.",
+        message: 'Failed to get statistics.',
         error:
-          process.env.NODE_ENV === "development" ? error.message : undefined,
+          process.env.NODE_ENV === 'development' ? error.message : undefined,
       });
     }
   }
@@ -148,12 +148,12 @@ router.get(
  * @access  Private (Supervisors only)
  */
 router.get(
-  "/supervisor/completed",
+  '/supervisor/completed',
   authenticateToken,
-  requireRole("supervisor"),
+  requireRole('supervisor'),
   async (req, res) => {
     try {
-      const { query } = require("../config/database");
+      const { query } = require('../config/database');
 
       const evaluations = await query(
         `
@@ -185,12 +185,12 @@ router.get(
         })),
       });
     } catch (error) {
-      console.error("Get supervisor evaluations error:", error);
+      console.error('Get supervisor evaluations error:', error);
       res.status(500).json({
         success: false,
-        message: "Failed to get evaluations.",
+        message: 'Failed to get evaluations.',
         error:
-          process.env.NODE_ENV === "development" ? error.message : undefined,
+          process.env.NODE_ENV === 'development' ? error.message : undefined,
       });
     }
   }
@@ -202,12 +202,12 @@ router.get(
  * @access  Private (Students only)
  */
 router.get(
-  "/student/my-evaluations",
+  '/student/my-evaluations',
   authenticateToken,
-  requireRole("student"),
+  requireRole('student'),
   async (req, res) => {
     try {
-      const { query } = require("../config/database");
+      const { query } = require('../config/database');
 
       const evaluations = await query(
         `
@@ -244,12 +244,12 @@ router.get(
         })),
       });
     } catch (error) {
-      console.error("Get student evaluations error:", error);
+      console.error('Get student evaluations error:', error);
       res.status(500).json({
         success: false,
-        message: "Failed to get evaluations.",
+        message: 'Failed to get evaluations.',
         error:
-          process.env.NODE_ENV === "development" ? error.message : undefined,
+          process.env.NODE_ENV === 'development' ? error.message : undefined,
       });
     }
   }
