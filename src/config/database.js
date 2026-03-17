@@ -128,7 +128,7 @@ const initializeDatabase = async () => {
         type ENUM('general', 'chapter', 'milestone') DEFAULT 'general',
         subject VARCHAR(500) NOT NULL,
         message TEXT NOT NULL,
-        rating INT CHECK (rating >= 1 AND rating <= 5),
+        rating INT,
         status ENUM('unread', 'read') DEFAULT 'unread',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
