@@ -30,7 +30,7 @@ const testConnection = async () => {
 };
 
 // Execute query with error handling
-const query = async (sql, params) => {
+const query = async (sql, params = []) => {
   try {
     const [results] = await pool.execute(sql, params);
     return results;
