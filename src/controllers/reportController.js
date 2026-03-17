@@ -7,18 +7,14 @@ const { query } = require('../config/database');
 const getDashboardStats = async (req, res) => {
   try {
     // Total counts
-    const [projectCount] = await query(
-      'SELECT COUNT(*) as count FROM projects'
-    );
+    const [projectCount] = await query('SELECT COUNT(*) as count FROM projects');
     const [userCount] = await query('SELECT COUNT(*) as count FROM users');
-    const [studentCount] = await query(
-      'SELECT COUNT(*) as count FROM users WHERE role = ?',
-      ['student']
-    );
-    const [supervisorCount] = await query(
-      'SELECT COUNT(*) as count FROM users WHERE role = ?',
-      ['supervisor']
-    );
+    const [studentCount] = await query('SELECT COUNT(*) as count FROM users WHERE role = ?', [
+      'student',
+    ]);
+    const [supervisorCount] = await query('SELECT COUNT(*) as count FROM users WHERE role = ?', [
+      'supervisor',
+    ]);
 
     // Projects by status
     const projectsByStatus = await query(`
@@ -46,7 +42,7 @@ const getDashboardStats = async (req, res) => {
     const recentSubmissions = await query(`
       SELECT COUNT(*) as count
       FROM projects
-      WHERE submission_date >= DATE_SUB(CURDATE(), INTERVAL 7 DAYS)
+      WHERE submission_date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
     `);
 
     // Pending reviews
@@ -67,7 +63,7 @@ const getDashboardStats = async (req, res) => {
           acc[p.status] = p.count;
           return acc;
         }, {}),
-        projectsByDepartment: projectsByDepartment.map((d) => ({
+        projectsByDepartment: projectsByDepartment.map(d => ({
           department: d.department,
           count: d.count,
         })),
@@ -162,7 +158,7 @@ const getDepartmentReport = async (req, res) => {
         averageProgress: avgProgress.avg_progress
           ? parseFloat(avgProgress.avg_progress).toFixed(2)
           : 0,
-        gradeDistribution: gradeDistribution.map((g) => ({
+        gradeDistribution: gradeDistribution.map(g => ({
           grade: g.grade,
           count: g.count,
         })),
@@ -243,12 +239,8 @@ const getStudentReport = async (req, res) => {
     let averageGrade = null;
     if (evaluations.length > 0) {
       const totalScore = evaluations.reduce((sum, e) => sum + e.total_score, 0);
-      const maxScore = evaluations.reduce(
-        (sum, e) => sum + e.max_total_score,
-        0
-      );
-      averageGrade =
-        maxScore > 0 ? ((totalScore / maxScore) * 100).toFixed(2) : 0;
+      const maxScore = evaluations.reduce((sum, e) => sum + e.max_total_score, 0);
+      averageGrade = maxScore > 0 ? ((totalScore / maxScore) * 100).toFixed(2) : 0;
     }
 
     res.json({
@@ -267,7 +259,7 @@ const getStudentReport = async (req, res) => {
           evaluationsCompleted: evaluations.length,
           averageGrade,
         },
-        projects: projects.map((p) => ({
+        projects: projects.map(p => ({
           id: p.id,
           title: p.title,
           status: p.status,
@@ -276,7 +268,7 @@ const getStudentReport = async (req, res) => {
           startDate: p.start_date,
           submissionDate: p.submission_date,
         })),
-        evaluations: evaluations.map((e) => ({
+        evaluations: evaluations.map(e => ({
           id: e.id,
           projectTitle: e.project_title,
           grade: e.grade,
@@ -388,7 +380,7 @@ const getSupervisorReport = async (req, res) => {
           acc[p.status] = p.count;
           return acc;
         }, {}),
-        students: students.map((s) => ({
+        students: students.map(s => ({
           id: s.id,
           name: s.name,
           email: s.email,
@@ -460,11 +452,11 @@ const getTimelineReport = async (req, res) => {
     res.json({
       success: true,
       data: {
-        projectsCreated: projectTimeline.map((p) => ({
+        projectsCreated: projectTimeline.map(p => ({
           date: p.date,
           count: p.count,
         })),
-        projectsSubmitted: submissionTimeline.map((s) => ({
+        projectsSubmitted: submissionTimeline.map(s => ({
           date: s.date,
           count: s.count,
         })),
