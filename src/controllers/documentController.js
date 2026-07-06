@@ -55,6 +55,17 @@ const uploadDocument = async (req, res) => {
     const { projectId, documentType } = req.body;
     const file = req.file;
 
+    let filePath = file.path;
+    if (!filePath && file.buffer) {
+      try {
+        ensureUploadDir();
+        filePath = path.join(UPLOAD_DIR, `${Date.now()}-${file.originalname}`);
+        fs.writeFileSync(filePath, file.buffer);
+      } catch {
+        filePath = null;
+      }
+    }
+
     const result = await query(
       `INSERT INTO documents (project_id, name, type, file_path, file_size, mime_type)
        VALUES (?, ?, ?, ?, ?, ?)`,
@@ -62,7 +73,7 @@ const uploadDocument = async (req, res) => {
         projectId,
         file.originalname,
         documentType || 'other',
-        file.path,
+        filePath,
         file.size ? String(file.size) : null,
         file.mimetype,
       ]
@@ -75,7 +86,7 @@ const uploadDocument = async (req, res) => {
         id: result.insertId,
         name: file.originalname,
         type: documentType || 'other',
-        filePath: file.path,
+        filePath: filePath || null,
         fileSize: file.size,
         mimeType: file.mimetype,
       },
@@ -153,17 +164,23 @@ const downloadDocument = async (req, res) => {
 
 const configureMulter = () => {
   const multer = require('multer');
-  ensureUploadDir();
 
-  const storage = multer.diskStorage({
-    destination: (_req, _file, cb) => {
-      cb(null, UPLOAD_DIR);
-    },
-    filename: (_req, file, cb) => {
-      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-      cb(null, uniqueSuffix + '-' + file.originalname);
-    },
-  });
+  let storage;
+  try {
+    ensureUploadDir();
+    storage = multer.diskStorage({
+      destination: (_req, _file, cb) => {
+        cb(null, UPLOAD_DIR);
+      },
+      filename: (_req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+        cb(null, uniqueSuffix + '-' + file.originalname);
+      },
+    });
+  } catch {
+    logger.warn('Upload directory not writable, falling back to memory storage');
+    storage = multer.memoryStorage();
+  }
 
   return multer({
     storage,
