@@ -1,22 +1,23 @@
 const bcrypt = require('bcryptjs');
 const { query, testConnection } = require('./config/database');
+const logger = require('./utils/logger');
 
 const seedDatabase = async () => {
   try {
-    console.log('\n🗑️  Clearing existing data...');
+    logger.info('Clearing existing data...');
 
     await query('SET FOREIGN_KEY_CHECKS = 0');
-    await query('DELETE FROM notifications');
-    await query('DELETE FROM evaluations');
-    await query('DELETE FROM feedback');
-    await query('DELETE FROM documents');
-    await query('DELETE FROM projects');
-    await query('DELETE FROM users');
+    await query('TRUNCATE TABLE notifications');
+    await query('TRUNCATE TABLE evaluations');
+    await query('TRUNCATE TABLE feedback');
+    await query('TRUNCATE TABLE documents');
+    await query('TRUNCATE TABLE projects');
+    await query('TRUNCATE TABLE users');
     await query('SET FOREIGN_KEY_CHECKS = 1');
 
-    console.log('✅ Existing data cleared\n');
+    logger.info('Existing data cleared');
 
-    console.log('👥 Creating users...');
+    logger.info('👥 Creating users...');
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash('password123', salt);
@@ -108,9 +109,9 @@ const seedDatabase = async () => {
         ]
       );
     }
-    console.log('✅ Created 6 users\n');
+    logger.info('✅ Created 6 users\n');
 
-    console.log('📁 Creating projects...');
+    logger.info('📁 Creating projects...');
 
     const projects = [
       {
@@ -261,9 +262,9 @@ const seedDatabase = async () => {
         ]
       );
     }
-    console.log('✅ Created 6 projects\n');
+    logger.info('✅ Created 6 projects\n');
 
-    console.log('📄 Creating documents...');
+    logger.info('📄 Creating documents...');
 
     const documents = [
       {
@@ -440,9 +441,9 @@ const seedDatabase = async () => {
         [doc.project_id, doc.name, doc.type, doc.file_path, doc.file_size, doc.mime_type]
       );
     }
-    console.log('✅ Created 20 documents\n');
+    logger.info('✅ Created 20 documents\n');
 
-    console.log('💬 Creating feedback...');
+    logger.info('💬 Creating feedback...');
 
     const feedback = [
       {
@@ -609,9 +610,9 @@ const seedDatabase = async () => {
         [fb.project_id, fb.supervisor_id, fb.type, fb.subject, fb.message, fb.rating, fb.status]
       );
     }
-    console.log('✅ Created 14 feedback entries\n');
+    logger.info('✅ Created 14 feedback entries\n');
 
-    console.log('📝 Creating evaluations...');
+    logger.info('📝 Creating evaluations...');
 
     const evaluations = [
       {
@@ -703,9 +704,9 @@ const seedDatabase = async () => {
         ]
       );
     }
-    console.log('✅ Created 4 evaluations\n');
+    logger.info('✅ Created 4 evaluations\n');
 
-    console.log('🔔 Creating notifications...');
+    logger.info('🔔 Creating notifications...');
 
     const notifications = [
       {
@@ -883,59 +884,59 @@ const seedDatabase = async () => {
         [notif.user_id, notif.type, notif.title, notif.message, notif.action_url, notif.read_status]
       );
     }
-    console.log('✅ Created 19 notifications\n');
+    logger.info('✅ Created 19 notifications\n');
 
-    console.log('═══════════════════════════════════════════════════════');
-    console.log('🎉 DATABASE SEEDING COMPLETED SUCCESSFULLY!');
-    console.log('═══════════════════════════════════════════════════════\n');
+    logger.info('═══════════════════════════════════════════════════════');
+    logger.info('🎉 DATABASE SEEDING COMPLETED SUCCESSFULLY!');
+    logger.info('═══════════════════════════════════════════════════════\n');
 
-    console.log('📋 SEED DATA SUMMARY:\n');
-    console.log('  👥 Users: 6');
-    console.log('     - 1 Admin: admin@uni.edu');
-    console.log('     - 2 Supervisors: s.johnson@uni.edu, m.brown@uni.edu');
-    console.log(
+    logger.info('📋 SEED DATA SUMMARY:\n');
+    logger.info('  👥 Users: 6');
+    logger.info('     - 1 Admin: admin@uni.edu');
+    logger.info('     - 2 Supervisors: s.johnson@uni.edu, m.brown@uni.edu');
+    logger.info(
       '     - 3 Students: john.smith@student.edu, emily.davis@student.edu, d.wilson@student.edu'
     );
-    console.log('');
-    console.log('  📁 Projects: 6');
-    console.log('     - #1: AI-Based Student Performance Predictor (approved, 100%)');
-    console.log('     - #2: E-Commerce Platform (under_review, 95%)');
-    console.log('     - #3: Mobile Health Monitoring App (in_progress, 70%)');
-    console.log('     - #4: Online Library Management System (rejected, 100%)');
-    console.log('     - #5: Smart Home Automation System (draft, 15%)');
-    console.log('     - #6: Blockchain Certificate Verification (submitted, 90%)');
-    console.log('');
-    console.log('  📄 Documents: 20');
-    console.log(
+    logger.info('');
+    logger.info('  📁 Projects: 6');
+    logger.info('     - #1: AI-Based Student Performance Predictor (approved, 100%)');
+    logger.info('     - #2: E-Commerce Platform (under_review, 95%)');
+    logger.info('     - #3: Mobile Health Monitoring App (in_progress, 70%)');
+    logger.info('     - #4: Online Library Management System (rejected, 100%)');
+    logger.info('     - #5: Smart Home Automation System (draft, 15%)');
+    logger.info('     - #6: Blockchain Certificate Verification (submitted, 90%)');
+    logger.info('');
+    logger.info('  📄 Documents: 20');
+    logger.info(
       '  💬 Feedback: 14 (all types: general, chapter, milestone; ratings 1-5; read/unread)'
     );
-    console.log('  📝 Evaluations: 4 (2 completed with grades A and F, 2 pending)');
-    console.log('  🔔 Notifications: 19 (mixed read/unread for all users)');
-    console.log('');
-    console.log('  🔑 Password for all users: password123');
-    console.log('');
-    console.log('═══════════════════════════════════════════════════════\n');
+    logger.info('  📝 Evaluations: 4 (2 completed with grades A and F, 2 pending)');
+    logger.info('  🔔 Notifications: 19 (mixed read/unread for all users)');
+    logger.info('');
+    logger.info('  🔑 Password for all users: password123');
+    logger.info('');
+    logger.info('═══════════════════════════════════════════════════════\n');
   } catch (error) {
-    console.error('❌ Seeding failed:', error.message);
+    logger.error('❌ Seeding failed:', error.message);
     throw error;
   }
 };
 
 const runSeed = async () => {
   try {
-    console.log('🔌 Testing database connection...');
+    logger.info('🔌 Testing database connection...');
     const connected = await testConnection();
 
     if (!connected) {
-      console.error('❌ Database connection failed. Please check your configuration.');
+      logger.error('❌ Database connection failed. Please check your configuration.');
       process.exit(1);
     }
 
-    console.log('✅ Database connected\n');
+    logger.info('✅ Database connected\n');
     await seedDatabase();
     process.exit(0);
   } catch (error) {
-    console.error('❌ Seed error:', error.message);
+    logger.error('❌ Seed error:', error.message);
     process.exit(1);
   }
 };
