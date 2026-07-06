@@ -3,11 +3,7 @@ const fs = require('fs');
 const { query } = require('../config/database');
 const logger = require('../utils/logger');
 
-<<<<<<< HEAD
 const UPLOAD_DIR = process.env.UPLOAD_PATH || path.join(__dirname, '../../uploads');
-=======
-const UPLOAD_DIR = path.join(__dirname, '../../uploads');
->>>>>>> origin/master
 
 const ensureUploadDir = () => {
   if (!fs.existsSync(UPLOAD_DIR)) {
