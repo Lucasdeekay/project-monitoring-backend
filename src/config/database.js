@@ -126,7 +126,7 @@ const initializeDatabase = async () => {
         id INT AUTO_INCREMENT PRIMARY KEY,
         project_id INT NOT NULL,
         supervisor_id INT NOT NULL,
-        type ENUM('general', 'chapter', 'milestone') DEFAULT 'general',
+        type ENUM('general', 'chapter', 'milestone', 'progress', 'concern', 'praise') DEFAULT 'general',
         subject VARCHAR(500) NOT NULL,
         message TEXT NOT NULL,
         rating INT,
@@ -137,6 +137,12 @@ const initializeDatabase = async () => {
         INDEX idx_project (project_id),
         INDEX idx_supervisor (supervisor_id)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `);
+
+    // Migrate feedback type ENUM to include new values
+    await query(`
+      ALTER TABLE feedback
+      MODIFY COLUMN type ENUM('general', 'chapter', 'milestone', 'progress', 'concern', 'praise') DEFAULT 'general'
     `);
 
     // Evaluations table
@@ -176,6 +182,17 @@ const initializeDatabase = async () => {
         INDEX idx_read (read_status)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
+
+    // Add reset_token and reset_token_expires columns to users table if not exist
+    try {
+      await query(`
+        ALTER TABLE users
+        ADD COLUMN reset_token VARCHAR(255) DEFAULT NULL,
+        ADD COLUMN reset_token_expires TIMESTAMP NULL DEFAULT NULL
+      `);
+    } catch {
+      // Columns may already exist - ignore
+    }
 
     logger.info('Database tables initialized successfully');
   } catch (error) {

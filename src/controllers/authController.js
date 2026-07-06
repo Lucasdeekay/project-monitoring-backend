@@ -432,10 +432,125 @@ const changePassword = async (req, res) => {
   }
 };
 
+/**
+ * Forgot password - send reset link
+ * POST /api/auth/forgot-password
+ */
+const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide your email address.',
+      });
+    }
+
+    // Check if user exists (but don't reveal existence in response)
+    const users = await query('SELECT id FROM users WHERE email = ?', [email]);
+
+    if (users.length > 0) {
+      const crypto = require('crypto');
+      const token = crypto.randomBytes(32).toString('hex');
+      const expires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+      await query(
+        'UPDATE users SET reset_token = ?, reset_token_expires = ? WHERE email = ?',
+        [token, expires, email]
+      );
+
+      console.log(`Password reset link: http://localhost:5173/reset-password?token=${token}&email=${email}`);
+
+      // In development, return token so frontend can use it
+      if (process.env.NODE_ENV === 'development') {
+        return res.json({
+          success: true,
+          message: 'If an account exists with that email, a reset link has been sent.',
+          data: { token, email },
+        });
+      }
+    }
+
+    res.json({
+      success: true,
+      message: 'If an account exists with that email, a reset link has been sent.',
+    });
+  } catch (error) {
+    logger.error('Forgot password error:', error.message);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to process request. Please try again.',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
+    });
+  }
+};
+
+/**
+ * Reset password
+ * POST /api/auth/reset-password
+ */
+const resetPassword = async (req, res) => {
+  try {
+    const { email, token, password } = req.body;
+
+    if (!email || !token || !password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide email, token, and new password.',
+      });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password must be at least 6 characters long.',
+      });
+    }
+
+    // Find user with valid reset token
+    const users = await query(
+      'SELECT id FROM users WHERE email = ? AND reset_token = ? AND reset_token_expires > NOW()',
+      [email, token]
+    );
+
+    if (users.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid or expired reset token.',
+      });
+    }
+
+    // Hash new password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    // Update password and clear reset fields
+    await query(
+      'UPDATE users SET password = ?, reset_token = NULL, reset_token_expires = NULL WHERE id = ?',
+      [hashedPassword, users[0].id]
+    );
+
+    res.json({
+      success: true,
+      message: 'Password reset successfully. You can now log in with your new password.',
+    });
+  } catch (error) {
+    logger.error('Reset password error:', error.message);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to reset password. Please try again.',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
+    });
+  }
+};
+
 module.exports = {
   register,
   login,
   getMe,
   updateProfile,
   changePassword,
+  forgotPassword,
+  resetPassword,
 };

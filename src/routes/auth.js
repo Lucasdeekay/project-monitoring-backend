@@ -6,6 +6,8 @@ const {
   getMe,
   updateProfile,
   changePassword,
+  forgotPassword,
+  resetPassword,
 } = require('../controllers/authController');
 const { authenticateToken, rateLimit } = require('../middleware/auth');
 
@@ -43,6 +45,20 @@ router.put('/profile', authenticateToken, updateProfile);
  * @access  Private
  */
 router.put('/change-password', authenticateToken, changePassword);
+
+/**
+ * @route   POST /api/auth/forgot-password
+ * @desc    Send password reset link
+ * @access  Public
+ */
+router.post('/forgot-password', rateLimit(3, 60 * 60 * 1000), forgotPassword);
+
+/**
+ * @route   POST /api/auth/reset-password
+ * @desc    Reset password with token
+ * @access  Public
+ */
+router.post('/reset-password', rateLimit(3, 60 * 60 * 1000), resetPassword);
 
 /**
  * @route   POST /api/auth/logout

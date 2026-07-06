@@ -164,7 +164,7 @@ const requestLog = {};
 
 const rateLimit = (maxRequests = 100, windowMs = 15 * 60 * 1000) => {
   return (req, res, next) => {
-    const userKey = req.ip || req.connection.remoteAddress;
+    const userKey = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'global';
     const now = Date.now();
 
     if (!requestLog[userKey]) {

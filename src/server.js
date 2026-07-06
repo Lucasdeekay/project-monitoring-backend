@@ -10,6 +10,9 @@ dotenv.config();
 // Create Express app
 const app = express();
 
+// Trust proxy headers (Vercel, Render, etc.)
+app.set('trust proxy', 1);
+
 // Middleware
 app.use(
   cors({
@@ -42,6 +45,18 @@ app.use(express.urlencoded({ extended: true }));
 
 // Request logging middleware
 app.use(logger.request);
+
+// Response logging middleware
+app.use((req, res, next) => {
+  const originalJson = res.json.bind(res);
+  res.json = function (body) {
+    logger.info(
+      `[RESPONSE] ${req.method} ${req.originalUrl} ${res.statusCode} ${JSON.stringify(body).substring(0, 1000)}`
+    );
+    return originalJson(body);
+  };
+  next();
+});
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

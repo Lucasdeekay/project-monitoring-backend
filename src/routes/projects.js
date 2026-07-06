@@ -92,6 +92,18 @@ router.post(
         ['submitted', id]
       );
 
+      // Create notification for supervisor
+      await query(
+        `INSERT INTO notifications (user_id, type, title, message, action_url, read_status)
+         VALUES (?, 'submission', ?, ?, ?, FALSE)`,
+        [
+          project.supervisor_id,
+          'New Project Submitted',
+          `${req.user.name} has submitted "${project.title}" for review`,
+          `/supervisor/projects/${id}`,
+        ]
+      );
+
       res.json({
         success: true,
         message: 'Project submitted successfully for review.',
@@ -103,6 +115,136 @@ router.post(
         message: 'Failed to submit project.',
         error:
           process.env.NODE_ENV === 'development' ? error.message : undefined,
+      });
+    }
+  }
+);
+
+/**
+ * @route   POST /api/projects/:id/approve
+ * @desc    Approve project
+ * @access  Private (Supervisor/Admin)
+ */
+router.post(
+  '/:id/approve',
+  authenticateToken,
+  requireRole('supervisor', 'admin'),
+  async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { query } = require('../config/database');
+
+      const projects = await query('SELECT * FROM projects WHERE id = ?', [id]);
+
+      if (projects.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: 'Project not found.',
+        });
+      }
+
+      const project = projects[0];
+
+      if (req.user.role === 'supervisor' && project.supervisor_id !== req.user.id) {
+        return res.status(403).json({
+          success: false,
+          message: 'You can only approve projects you supervise.',
+        });
+      }
+
+      await query(
+        "UPDATE projects SET status = 'approved', progress = 100 WHERE id = ?",
+        [id]
+      );
+
+      // Notify student
+      await query(
+        `INSERT INTO notifications (user_id, type, title, message, action_url, read_status)
+         VALUES (?, 'evaluation', ?, ?, ?, FALSE)`,
+        [
+          project.student_id,
+          'Project Approved',
+          `Your project "${project.title}" has been approved!`,
+          `/student/projects/${id}`,
+        ]
+      );
+
+      res.json({
+        success: true,
+        message: 'Project approved successfully.',
+      });
+    } catch (error) {
+      console.error('Approve project error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to approve project.',
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined,
+      });
+    }
+  }
+);
+
+/**
+ * @route   POST /api/projects/:id/reject
+ * @desc    Reject project
+ * @access  Private (Supervisor/Admin)
+ */
+router.post(
+  '/:id/reject',
+  authenticateToken,
+  requireRole('supervisor', 'admin'),
+  async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { reason } = req.body;
+
+      const projects = await query('SELECT * FROM projects WHERE id = ?', [id]);
+
+      if (projects.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: 'Project not found.',
+        });
+      }
+
+      const project = projects[0];
+
+      if (req.user.role === 'supervisor' && project.supervisor_id !== req.user.id) {
+        return res.status(403).json({
+          success: false,
+          message: 'You can only reject projects you supervise.',
+        });
+      }
+
+      await query(
+        "UPDATE projects SET status = 'rejected' WHERE id = ?",
+        [id]
+      );
+
+      // Notify student
+      await query(
+        `INSERT INTO notifications (user_id, type, title, message, action_url, read_status)
+         VALUES (?, 'feedback', ?, ?, ?, FALSE)`,
+        [
+          project.student_id,
+          'Project Rejected',
+          reason
+            ? `Your project "${project.title}" has been rejected. Reason: ${reason}`
+            : `Your project "${project.title}" has been rejected. Please review feedback and resubmit.`,
+          `/student/projects/${id}`,
+        ]
+      );
+
+      res.json({
+        success: true,
+        message: 'Project rejected.',
+      });
+    } catch (error) {
+      console.error('Reject project error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to reject project.',
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined,
       });
     }
   }
