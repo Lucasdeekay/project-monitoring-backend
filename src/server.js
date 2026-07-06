@@ -11,14 +11,29 @@ dotenv.config();
 const app = express();
 
 // Middleware
-const allowedOrigins = [
-  process.env.CLIENT_URL || 'http://localhost:5173',
-  'https://project-monitoring-backend-ix33.onrender.com',
-  'https://project-monitoring-system.vercel.app',
-];
 app.use(
   cors({
-    origin: allowedOrigins,
+    origin: (origin, callback) => {
+      const allowedOrigins = [
+        process.env.CLIENT_URL,
+        'http://localhost:5173',
+        'http://localhost:3000',
+        'https://project-monitoring-system.vercel.app',
+        'https://project-monitoring-backend.vercel.app',
+        'https://project-monitoring-backend-ix33.onrender.com',
+      ].filter(Boolean);
+
+      if (
+        !origin ||
+        allowedOrigins.includes(origin) ||
+        origin.endsWith('.vercel.app') ||
+        origin.endsWith('.onrender.com')
+      ) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,
   })
 );
