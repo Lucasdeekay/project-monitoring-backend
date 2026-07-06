@@ -1,15 +1,6 @@
-const path = require('path');
-const fs = require('fs');
+const { put, del } = require('@vercel/blob');
 const { query } = require('../config/database');
 const logger = require('../utils/logger');
-
-const UPLOAD_DIR = process.env.UPLOAD_PATH || path.join(__dirname, '../../uploads');
-
-const ensureUploadDir = () => {
-  if (!fs.existsSync(UPLOAD_DIR)) {
-    fs.mkdirSync(UPLOAD_DIR, { recursive: true });
-  }
-};
 
 const getDocumentsByProject = async (req, res) => {
   try {
@@ -55,16 +46,11 @@ const uploadDocument = async (req, res) => {
     const { projectId, documentType } = req.body;
     const file = req.file;
 
-    let filePath = file.path;
-    if (!filePath && file.buffer) {
-      try {
-        ensureUploadDir();
-        filePath = path.join(UPLOAD_DIR, `${Date.now()}-${file.originalname}`);
-        fs.writeFileSync(filePath, file.buffer);
-      } catch {
-        filePath = null;
-      }
-    }
+    const blob = await put(
+      `uploads/${Date.now()}-${file.originalname}`,
+      file.buffer,
+      { access: 'public', contentType: file.mimetype }
+    );
 
     const result = await query(
       `INSERT INTO documents (project_id, name, type, file_path, file_size, mime_type)
@@ -73,7 +59,7 @@ const uploadDocument = async (req, res) => {
         projectId,
         file.originalname,
         documentType || 'other',
-        filePath,
+        blob.url,
         file.size ? String(file.size) : null,
         file.mimetype,
       ]
@@ -86,7 +72,7 @@ const uploadDocument = async (req, res) => {
         id: result.insertId,
         name: file.originalname,
         type: documentType || 'other',
-        filePath: filePath || null,
+        filePath: blob.url,
         fileSize: file.size,
         mimeType: file.mimetype,
       },
@@ -114,8 +100,11 @@ const deleteDocument = async (req, res) => {
     }
 
     const doc = docs[0];
-    if (fs.existsSync(doc.file_path)) {
-      fs.unlinkSync(doc.file_path);
+
+    try {
+      await del(doc.file_path);
+    } catch {
+      logger.warn('Failed to delete blob, continuing with DB cleanup');
     }
 
     await query('DELETE FROM documents WHERE id = ?', [id]);
@@ -144,14 +133,7 @@ const downloadDocument = async (req, res) => {
     }
 
     const doc = docs[0];
-    if (!fs.existsSync(doc.file_path)) {
-      return res.status(404).json({
-        success: false,
-        message: 'File not found on server.',
-      });
-    }
-
-    res.download(doc.file_path, doc.name);
+    res.redirect(doc.file_path);
   } catch (error) {
     logger.error('Download document error:', error.message);
     res.status(500).json({
@@ -165,25 +147,8 @@ const downloadDocument = async (req, res) => {
 const configureMulter = () => {
   const multer = require('multer');
 
-  let storage;
-  try {
-    ensureUploadDir();
-    storage = multer.diskStorage({
-      destination: (_req, _file, cb) => {
-        cb(null, UPLOAD_DIR);
-      },
-      filename: (_req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-        cb(null, uniqueSuffix + '-' + file.originalname);
-      },
-    });
-  } catch {
-    logger.warn('Upload directory not writable, falling back to memory storage');
-    storage = multer.memoryStorage();
-  }
-
   return multer({
-    storage,
+    storage: multer.memoryStorage(),
     limits: { fileSize: parseInt(process.env.MAX_FILE_SIZE) || 5 * 1024 * 1024 },
   }).single('file');
 };

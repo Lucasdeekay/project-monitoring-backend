@@ -1,7 +1,6 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
-const path = require('path');
 const logger = require('./utils/logger');
 const { testConnection, initializeDatabase } = require('./config/database');
 
@@ -25,9 +24,6 @@ app.use(
 );
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// Serve uploaded files statically
-app.use('/uploads', express.static(process.env.UPLOAD_PATH || path.join(__dirname, '../uploads')));
 
 // Request logging middleware
 app.use(logger.request);
