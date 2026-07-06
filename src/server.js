@@ -116,9 +116,9 @@ const startServer = async () => {
       console.log('═══════════════════════════════════════════════════════');
       console.log('🚀 Project Monitoring API Server');
       console.log('═══════════════════════════════════════════════════════');
-      console.log(`📡 Server running on: ${process.env.CLIENT_URL}:${PORT}`);
+      console.log(`📡 Server running on: ${process.env.BACKEND_URL}:${PORT}`);
       console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-      console.log(`📊 Health check: ${process.env.CLIENT_URL}/api/health`);
+      console.log(`📊 Health check: ${process.env.BACKEND_URL}/api/health`);
       console.log(`🔗 Frontend URL: ${process.env.CLIENT_URL}`);
       console.log('═══════════════════════════════════════════════════════');
       console.log('');
