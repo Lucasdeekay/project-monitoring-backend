@@ -1,4 +1,5 @@
 const mysql = require('mysql2/promise');
+const logger = require('../utils/logger');
 require('dotenv').config();
 
 // Database connection configuration
@@ -20,11 +21,11 @@ const pool = mysql.createPool(dbConfig);
 const testConnection = async () => {
   try {
     const connection = await pool.getConnection();
-    console.log('✅ Database connected successfully');
+    logger.info('Database connected successfully');
     connection.release();
     return true;
   } catch (error) {
-    console.error('❌ Database connection failed:', error.message);
+    logger.error('Database connection failed:', error.message);
     return false;
   }
 };
@@ -35,7 +36,7 @@ const query = async (sql, params = []) => {
     const [results] = await pool.query(sql, params);
     return results;
   } catch (error) {
-    console.error('Database query error:', error.message);
+    logger.error('Database query error:', error.message);
     throw error;
   }
 };
@@ -45,7 +46,7 @@ const getConnection = async () => {
   try {
     return await pool.getConnection();
   } catch (error) {
-    console.error('Failed to get database connection:', error.message);
+    logger.error('Failed to get database connection:', error.message);
     throw error;
   }
 };
@@ -53,7 +54,7 @@ const getConnection = async () => {
 // Initialize database tables
 const initializeDatabase = async () => {
   try {
-    console.log('📦 Initializing database tables...');
+    logger.info('Initializing database tables...');
 
     // Users table
     await query(`
@@ -176,9 +177,9 @@ const initializeDatabase = async () => {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
 
-    console.log('✅ Database tables initialized successfully');
+    logger.info('Database tables initialized successfully');
   } catch (error) {
-    console.error('❌ Database initialization failed:', error.message);
+    logger.error('Database initialization failed:', error.message);
     throw error;
   }
 };

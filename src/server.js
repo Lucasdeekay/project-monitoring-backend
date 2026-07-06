@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const path = require('path');
+const logger = require('./utils/logger');
 const { testConnection, initializeDatabase } = require('./config/database');
 
 // Load environment variables
@@ -28,13 +29,8 @@ app.use(express.urlencoded({ extended: true }));
 // Serve uploaded files statically
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
-// Request logging middleware (development)
-if (process.env.NODE_ENV === 'development') {
-  app.use((req, res, next) => {
-    console.log(`${req.method} ${req.path}`);
-    next();
-  });
-}
+// Request logging middleware
+app.use(logger.request);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -46,13 +42,15 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// API Routes (will be added in next steps)
+// API Routes
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/projects', require('./routes/projects'));
 app.use('/api/feedback', require('./routes/feedback'));
 app.use('/api/evaluations', require('./routes/evaluations'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/reports', require('./routes/reports'));
+app.use('/api/notifications', require('./routes/notifications'));
+app.use('/api/documents', require('./routes/documents'));
 
 // Root endpoint
 app.get('/', (req, res) => {
@@ -67,6 +65,8 @@ app.get('/', (req, res) => {
       evaluations: '/api/evaluations',
       users: '/api/users',
       reports: '/api/reports',
+      notifications: '/api/notifications',
+      documents: '/api/documents',
     },
   });
 });
@@ -82,7 +82,7 @@ app.use((req, res) => {
 
 // Global error handler
 app.use((err, req, res, _next) => {
-  console.error('Error:', err.message);
+  logger.error(err.message, err.stack);
 
   res.status(err.status || 500).json({
     success: false,
@@ -98,57 +98,58 @@ const PORT = process.env.PORT || 5000;
 const startServer = async () => {
   try {
     // Test database connection
-    console.log('🔌 Testing database connection...');
+    logger.info('Testing database connection...');
     const dbConnected = await testConnection();
 
     if (!dbConnected) {
-      console.error('❌ Failed to connect to database. Please check your configuration.');
+      logger.error('Failed to connect to database. Please check your configuration.');
       process.exit(1);
     }
 
     // Initialize database tables
-    console.log('📦 Initializing database...');
+    logger.info('Initializing database...');
     await initializeDatabase();
 
     // Start Express server
+    const serverUrl = `http://0.0.0.0:${PORT}`;
     app.listen(PORT, () => {
-      console.log('');
-      console.log('═══════════════════════════════════════════════════════');
-      console.log('🚀 Project Monitoring API Server');
-      console.log('═══════════════════════════════════════════════════════');
-      console.log(`📡 Server running on: ${process.env.BACKEND_URL}:${PORT}`);
-      console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-      console.log(`📊 Health check: ${process.env.BACKEND_URL}/api/health`);
-      console.log(`🔗 Frontend URL: ${process.env.CLIENT_URL}`);
-      console.log('═══════════════════════════════════════════════════════');
-      console.log('');
+      logger.info('');
+      logger.info('═══════════════════════════════════════════════════════');
+      logger.info('🚀 Project Monitoring API Server');
+      logger.info('═══════════════════════════════════════════════════════');
+      logger.info(`📡 Server running on: ${serverUrl}`);
+      logger.info(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+      logger.info(`📊 Health check: ${serverUrl}/api/health`);
+      logger.info(`🔗 Frontend URL: ${process.env.CLIENT_URL || 'http://localhost:5173'}`);
+      logger.info('═══════════════════════════════════════════════════════');
+      logger.info('');
     });
   } catch (error) {
-    console.error('❌ Failed to start server:', error.message);
+    logger.error('Failed to start server:', error.message);
     process.exit(1);
   }
 };
 
 // Handle uncaught exceptions
 process.on('uncaughtException', error => {
-  console.error('Uncaught Exception:', error);
+  logger.error('Uncaught Exception:', error);
   process.exit(1);
 });
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', error => {
-  console.error('Unhandled Rejection:', error);
+  logger.error('Unhandled Rejection:', error);
   process.exit(1);
 });
 
 // Graceful shutdown
 process.on('SIGTERM', () => {
-  console.log('SIGTERM received, shutting down gracefully...');
+  logger.info('SIGTERM received, shutting down gracefully...');
   process.exit(0);
 });
 
 process.on('SIGINT', () => {
-  console.log('SIGINT received, shutting down gracefully...');
+  logger.info('SIGINT received, shutting down gracefully...');
   process.exit(0);
 });
 

@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { query } = require('../config/database');
+const logger = require('../utils/logger');
 
 /**
  * Generate JWT token
@@ -136,7 +137,7 @@ const register = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Registration error:', error);
+    logger.error('Registration error:', error.message);
     res.status(500).json({
       success: false,
       message: 'Registration failed. Please try again.',
@@ -206,7 +207,7 @@ const login = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Login error:', error);
+    logger.error('Login error:', error.message);
     res.status(500).json({
       success: false,
       message: 'Login failed. Please try again.',
@@ -257,7 +258,7 @@ const getMe = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Get profile error:', error);
+    logger.error('Get profile error:', error.message);
     res.status(500).json({
       success: false,
       message: 'Failed to get user profile.',
@@ -356,7 +357,7 @@ const updateProfile = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Update profile error:', error);
+    logger.error('Update profile error:', error.message);
     res.status(500).json({
       success: false,
       message: 'Failed to update profile.',
@@ -422,7 +423,7 @@ const changePassword = async (req, res) => {
       message: 'Password changed successfully.',
     });
   } catch (error) {
-    console.error('Change password error:', error);
+    logger.error('Change password error:', error.message);
     res.status(500).json({
       success: false,
       message: 'Failed to change password.',

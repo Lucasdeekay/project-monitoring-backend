@@ -1,4 +1,5 @@
 const { query } = require('../config/database');
+const logger = require('../utils/logger');
 
 const safeJsonParse = (str, defaultValue = []) => {
   if (!str) return defaultValue;
@@ -125,7 +126,7 @@ const getAllProjects = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Get projects error:', error);
+    logger.error('Get projects error:', error.message);
     res.status(500).json({
       success: false,
       message: 'Failed to retrieve projects.',
@@ -236,7 +237,7 @@ const getProjectById = async (req, res) => {
       data: formattedProject,
     });
   } catch (error) {
-    console.error('Get project error:', error);
+    logger.error('Get project error:', error.message);
     res.status(500).json({
       success: false,
       message: 'Failed to retrieve project.',
@@ -342,7 +343,7 @@ const createProject = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Create project error:', error);
+    logger.error('Create project error:', error.message);
     res.status(500).json({
       success: false,
       message: 'Failed to create project.',
@@ -480,7 +481,7 @@ const updateProject = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Update project error:', error);
+    logger.error('Update project error:', error.message);
     res.status(500).json({
       success: false,
       message: 'Failed to update project.',
@@ -532,7 +533,7 @@ const deleteProject = async (req, res) => {
       message: 'Project deleted successfully.',
     });
   } catch (error) {
-    console.error('Delete project error:', error);
+    logger.error('Delete project error:', error.message);
     res.status(500).json({
       success: false,
       message: 'Failed to delete project.',

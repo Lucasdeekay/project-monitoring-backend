@@ -1,4 +1,5 @@
 const { query } = require('../config/database');
+const logger = require('../utils/logger');
 
 /**
  * Get overall system statistics
@@ -75,7 +76,7 @@ const getDashboardStats = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Get dashboard stats error:', error);
+    logger.error('Get dashboard stats error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to retrieve dashboard statistics.',
@@ -165,7 +166,7 @@ const getDepartmentReport = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Get department report error:', error);
+    logger.error('Get department report error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to retrieve department report.',
@@ -279,7 +280,7 @@ const getStudentReport = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Get student report error:', error);
+    logger.error('Get student report error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to retrieve student report.',
@@ -392,7 +393,7 @@ const getSupervisorReport = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Get supervisor report error:', error);
+    logger.error('Get supervisor report error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to retrieve supervisor report.',
@@ -463,7 +464,7 @@ const getTimelineReport = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Get timeline report error:', error);
+    logger.error('Get timeline report error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to retrieve timeline report.',

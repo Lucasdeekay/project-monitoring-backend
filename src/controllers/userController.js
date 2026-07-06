@@ -1,5 +1,6 @@
 const bcrypt = require('bcryptjs');
 const { query } = require('../config/database');
+const logger = require('../utils/logger');
 
 /**
  * Get all users (with filters)
@@ -76,7 +77,7 @@ const getAllUsers = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Get users error:', error);
+    logger.error('Get users error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to retrieve users.',
@@ -168,7 +169,7 @@ const getUserById = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Get user error:', error);
+    logger.error('Get user error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to retrieve user.',
@@ -260,7 +261,7 @@ const createUser = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Create user error:', error);
+    logger.error('Create user error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to create user.',
@@ -386,7 +387,7 @@ const updateUser = async (req, res) => {
       data: updatedUsers[0],
     });
   } catch (error) {
-    console.error('Update user error:', error);
+    logger.error('Update user error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to update user.',
@@ -429,7 +430,7 @@ const deleteUser = async (req, res) => {
       message: 'User deleted successfully.',
     });
   } catch (error) {
-    console.error('Delete user error:', error);
+    logger.error('Delete user error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to delete user.',
@@ -465,7 +466,7 @@ const getSupervisorsList = async (req, res) => {
       })),
     });
   } catch (error) {
-    console.error('Get supervisors error:', error);
+    logger.error('Get supervisors error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to retrieve supervisors.',

@@ -1,4 +1,5 @@
 const { query } = require('../config/database');
+const logger = require('../utils/logger');
 
 /**
  * Get all feedback for a project
@@ -76,7 +77,7 @@ const getFeedbackByProject = async (req, res) => {
       })),
     });
   } catch (error) {
-    console.error('Get feedback error:', error);
+    logger.error('Get feedback error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to retrieve feedback.',
@@ -161,7 +162,7 @@ const getFeedbackById = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Get feedback error:', error);
+    logger.error('Get feedback error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to retrieve feedback.',
@@ -276,7 +277,7 @@ const createFeedback = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Create feedback error:', error);
+    logger.error('Create feedback error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to create feedback.',
@@ -383,7 +384,7 @@ const updateFeedback = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Update feedback error:', error);
+    logger.error('Update feedback error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to update feedback.',
@@ -429,7 +430,7 @@ const deleteFeedback = async (req, res) => {
       message: 'Feedback deleted successfully.',
     });
   } catch (error) {
-    console.error('Delete feedback error:', error);
+    logger.error('Delete feedback error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to delete feedback.',
@@ -478,7 +479,7 @@ const markAsRead = async (req, res) => {
       message: 'Feedback marked as read.',
     });
   } catch (error) {
-    console.error('Mark as read error:', error);
+    logger.error('Mark as read error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to mark feedback as read.',

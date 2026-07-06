@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const { query } = require('../config/database');
+const logger = require('../utils/logger');
 
 /**
  * Verify JWT token and attach user to request
@@ -51,7 +52,7 @@ const authenticateToken = async (req, res, next) => {
       });
     }
 
-    console.error('Auth middleware error:', error);
+    logger.error('Auth middleware error:', error.message);
     res.status(500).json({
       success: false,
       message: 'Authentication error.',
@@ -147,7 +148,7 @@ const requireOwnershipOrAdmin = (resourceUserIdField = 'student_id') => {
 
       next();
     } catch (error) {
-      console.error('Ownership check error:', error);
+      logger.error('Ownership check error:', error.message);
       res.status(500).json({
         success: false,
         message: 'Error checking resource ownership.',

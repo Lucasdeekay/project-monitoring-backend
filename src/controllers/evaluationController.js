@@ -1,4 +1,5 @@
 const { query } = require('../config/database');
+const logger = require('../utils/logger');
 
 const safeJsonParse = (str, defaultValue = null) => {
   if (!str) return defaultValue;
@@ -80,7 +81,7 @@ const getEvaluationsByProject = async (req, res) => {
       })),
     });
   } catch (error) {
-    console.error('Get evaluations error:', error);
+    logger.error('Get evaluations error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to retrieve evaluations.',
@@ -159,7 +160,7 @@ const getEvaluationById = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Get evaluation error:', error);
+    logger.error('Get evaluation error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to retrieve evaluation.',
@@ -308,7 +309,7 @@ const createEvaluation = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Create evaluation error:', error);
+    logger.error('Create evaluation error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to create evaluation.',
@@ -424,7 +425,7 @@ const updateEvaluation = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Update evaluation error:', error);
+    logger.error('Update evaluation error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to update evaluation.',
@@ -468,7 +469,7 @@ const deleteEvaluation = async (req, res) => {
       message: 'Evaluation deleted successfully.',
     });
   } catch (error) {
-    console.error('Delete evaluation error:', error);
+    logger.error('Delete evaluation error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to delete evaluation.',
